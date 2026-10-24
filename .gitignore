@@ -26,3 +26,7 @@ reports/safe-mode-*.md
 .idea/
 Thumbs.db
 desktop.ini
+
+# 本机会话记录与临时提交草稿
+STATUS.md
+reports/submit/
