@@ -1,0 +1,626 @@
+{
+ "96581d3c-e3e2-4cdc-ab73-ee8309a401d9": {
+  "start": "2026-10-17T01:22:20.397000+00:00",
+  "duration_s": 27.1,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "8482bcde-0fa3-4fb9-b658-62f2c19f58f2": {
+  "start": "2026-10-17T01:22:49.794000+00:00",
+  "duration_s": 44.7,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "config-broken",
+  "note": "unexpected token '﻿', \"﻿{"
+ },
+ "814556d8-170e-4d86-ac6c-a28781c6ffb6": {
+  "start": "2026-10-17T01:25:05.596000+00:00",
+  "duration_s": 16.9,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "ebdbddd8-8111-45b9-8f89-3b2450c8b9d8": {
+  "start": "2026-10-17T01:25:22.963000+00:00",
+  "duration_s": 80.4,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "b97333df-f3a1-4672-9458-25795a7ea129": {
+  "start": "2026-10-17T01:26:47.455000+00:00",
+  "duration_s": 974.0,
+  "family": "unknown",
+  "kind": "unclean-unknown",
+  "category": null,
+  "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
+ },
+ "e6254b26-968f-4570-996e-e4d9c3ad8bd6": {
+  "start": "2026-10-17T01:48:41.680000+00:00",
+  "duration_s": 38.6,
+  "family": "unknown",
+  "kind": "unclean-unknown",
+  "category": null,
+  "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
+ },
+ "2df21672-1512-4108-aaec-cb7936c29c37": {
+  "start": "2026-10-17T01:49:22.601000+00:00",
+  "duration_s": 52.3,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "ebbbe4d1-ca30-4f16-910b-ec9209e506d0": {
+  "start": "2026-10-17T01:50:15.238000+00:00",
+  "duration_s": 161.4,
+  "family": "unknown",
+  "kind": "unclean-unknown",
+  "category": null,
+  "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
+ },
+ "86b65833-5f44-4079-b8ec-00cac1b6b109": {
+  "start": "2026-10-17T01:53:03.177000+00:00",
+  "duration_s": 2707.6,
+  "family": "unknown",
+  "kind": "unclean-unknown",
+  "category": null,
+  "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
+ },
+ "f26d91f2-601b-4456-9716-ce3b962054f4": {
+  "start": "2026-10-17T02:47:35.950000+00:00",
+  "duration_s": 1173.1,
+  "family": "unknown",
+  "kind": "unclean-unknown",
+  "category": null,
+  "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
+ },
+ "4163963a-caae-410e-9cd8-8904f7ae2599": {
+  "start": "2026-10-17T03:09:51.684000+00:00",
+  "duration_s": 52211.1,
+  "family": "clean",
+  "kind": "shutdown",
+  "category": null,
+  "note": "无 run.end，下次启动前机器关机（事件 1074）"
+ },
+ "753752cd-0ff6-4c71-95a8-2aa745cacac7": {
+  "start": "2026-10-18T04:13:49.513000+00:00",
+  "duration_s": 5169.3,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "6427a846-d691-419d-aba8-86aef6a7b70f": {
+  "start": "2026-10-18T05:40:02.841000+00:00",
+  "duration_s": 5334.7,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "dc0adef3-e812-4ee1-877a-eac1dd4b2213": {
+  "start": "2026-10-18T07:09:17.910000+00:00",
+  "duration_s": 5171.0,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "98895e48-4b12-4152-8ca6-d2891e77e9f5": {
+  "start": "2026-10-18T08:35:31.192000+00:00",
+  "duration_s": 0.3,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "a64cd7c6-1176-4325-917b-49214b284978": {
+  "start": "2026-10-18T08:35:39.813000+00:00",
+  "duration_s": 12550.0,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "d2ab32ae-1285-4221-97be-6573de25c02c": {
+  "start": "2026-10-18T12:04:55.872000+00:00",
+  "duration_s": 0.7,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "e2306877-1bce-4b4d-8674-82a863c3883e": {
+  "start": "2026-10-18T12:04:56.635000+00:00",
+  "duration_s": 6306.7,
+  "family": "clean",
+  "kind": "quit-forced",
+  "category": null,
+  "note": "用户关窗、host 超时被强杀"
+ },
+ "d33362eb-3e5d-4e3e-89b4-148d03af45cd": {
+  "start": "2026-10-18T13:50:07.390000+00:00",
+  "duration_s": 0.3,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "f4cc68ff-e090-4346-8664-8a13826b8539": {
+  "start": "2026-10-18T13:50:09.762000+00:00",
+  "duration_s": 0.3,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "6c09206c-8c53-493f-b016-8f915f273811": {
+  "start": "2026-10-18T13:51:03.608000+00:00",
+  "duration_s": 6066.1,
+  "family": "clean",
+  "kind": "shutdown",
+  "category": null,
+  "note": "无 run.end，下次启动前机器关机（事件 1074）"
+ },
+ "ba6600f3-40a4-468e-acaa-d91ec03f8f30": {
+  "start": "2026-10-19T04:53:17.593000+00:00",
+  "duration_s": 0.3,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "97733c3c-2c9c-470c-944d-0962fb2e230a": {
+  "start": "2026-10-19T04:53:44.861000+00:00",
+  "duration_s": 0.3,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "943207fe-198c-4a5f-bf21-93b84c325899": {
+  "start": "2026-10-19T04:53:46.700000+00:00",
+  "duration_s": 0.3,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "6dd92f11-331a-4b06-9602-181a58c411ed": {
+  "start": "2026-10-19T04:53:59.369000+00:00",
+  "duration_s": 15604.5,
+  "family": "unknown",
+  "kind": "unclean-unknown",
+  "category": null,
+  "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
+ },
+ "ae10cd1b-74fb-4fd0-a525-f372f8167b99": {
+  "start": "2026-10-19T09:15:15.624000+00:00",
+  "duration_s": 3385.3,
+  "family": "clean",
+  "kind": "shutdown",
+  "category": null,
+  "note": "无 run.end，下次启动前机器关机（事件 1074）"
+ },
+ "f0977e70-1b47-49af-9bff-82724bceed47": {
+  "start": "2026-10-19T10:17:27.622000+00:00",
+  "duration_s": 0.3,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "fe06b7e2-7261-47c2-bfa8-1f06c1d7b07e": {
+  "start": "2026-10-19T10:17:30.629000+00:00",
+  "duration_s": 0.3,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "0e947373-43eb-4b98-aa48-b636122e89ad": {
+  "start": "2026-10-19T10:17:41.654000+00:00",
+  "duration_s": 21428.6,
+  "family": "clean",
+  "kind": "shutdown",
+  "category": null,
+  "note": "无 run.end，下次启动前机器关机（事件 1074）"
+ },
+ "9f27a58c-b562-4a22-b16b-9716e820aeb3": {
+  "start": "2026-10-19T23:09:16.038000+00:00",
+  "duration_s": 8851.3,
+  "family": "problem",
+  "kind": "crash",
+  "category": "host-exit",
+  "note": "dsh desktop host exited with 1073807364: dsh-desktop-next: outbound proxy = none (source: none; the system proxy resolve"
+ },
+ "b2f5e434-7e32-4912-a93b-681003170144": {
+  "start": "2026-10-20T01:59:13.813000+00:00",
+  "duration_s": 0.4,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "8db87d87-556f-4b87-8110-d37e11bf28a2": {
+  "start": "2026-10-20T01:59:32.487000+00:00",
+  "duration_s": 0.4,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "d88398f5-e401-4eae-ae6d-6d98cd0b0cb0": {
+  "start": "2026-10-20T01:59:52.361000+00:00",
+  "duration_s": 0.4,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "68035e9f-60b0-408f-a524-fc39ff8957bd": {
+  "start": "2026-10-20T01:59:59.224000+00:00",
+  "duration_s": 30384.1,
+  "family": "clean",
+  "kind": "shutdown",
+  "category": "host-exit",
+  "note": "失败发生在关机序列内（1074 10:26:17Z→6006）"
+ },
+ "d629e1bb-27a8-4285-8d1a-7e26faa45492": {
+  "start": "2026-10-20T10:28:45.467000+00:00",
+  "duration_s": 18248.1,
+  "family": "clean",
+  "kind": "shutdown",
+  "category": null,
+  "note": "无 run.end，下次启动前机器关机（事件 1074）"
+ },
+ "991d3913-ff74-413d-a5ff-02a6dad4dd77": {
+  "start": "2026-10-21T00:54:02.626000+00:00",
+  "duration_s": 0.3,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "18a5b05f-7b46-4491-9373-dff5ead98f8a": {
+  "start": "2026-10-21T00:54:05.725000+00:00",
+  "duration_s": 12885.8,
+  "family": "clean",
+  "kind": "shutdown",
+  "category": null,
+  "note": "无 run.end，下次启动前机器关机（事件 1074）"
+ },
+ "2a5a3e2d-2dab-4bb7-a13a-5da1cefda7e6": {
+  "start": "2026-10-21T04:32:56.759000+00:00",
+  "duration_s": 32227.3,
+  "family": "clean",
+  "kind": "quit-forced",
+  "category": null,
+  "note": "用户关窗、host 超时被强杀"
+ },
+ "66fb8ae1-d7eb-4f3b-987b-90f00a2431fd": {
+  "start": "2026-10-21T13:30:22.534000+00:00",
+  "duration_s": 0.4,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "d5fbe93e-d944-4b75-86b4-3e50961b354b": {
+  "start": "2026-10-21T13:30:50.282000+00:00",
+  "duration_s": 0.4,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "647cdf15-afea-4ca6-a0fd-9e17d1d83991": {
+  "start": "2026-10-21T13:30:53.499000+00:00",
+  "duration_s": 1034.6,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "c3b61331-9f57-4aa0-a737-eeadddac1790": {
+  "start": "2026-10-21T13:48:10.452000+00:00",
+  "duration_s": 1061.9,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "6512ded7-2542-4291-b8e5-635caa52d554": {
+  "start": "2026-10-21T14:05:57.677000+00:00",
+  "duration_s": 0.3,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "8bf21651-5e3b-4221-8198-fabc32824bbb": {
+  "start": "2026-10-21T14:06:28.799000+00:00",
+  "duration_s": 683.4,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "5568edc6-5448-4807-94c6-bf4982424db3": {
+  "start": "2026-10-21T14:17:53.702000+00:00",
+  "duration_s": 1397.3,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "9eb15017-627d-482b-966a-81f734efb9ba": {
+  "start": "2026-10-21T14:41:13.363000+00:00",
+  "duration_s": 8305.8,
+  "family": "clean",
+  "kind": "shutdown",
+  "category": null,
+  "note": "无 run.end，下次启动前机器关机（事件 1074）"
+ },
+ "1874e497-7530-4e7d-88dc-1006a45b623c": {
+  "start": "2026-10-21T23:07:37.333000+00:00",
+  "duration_s": 915.1,
+  "family": "clean",
+  "kind": "shutdown",
+  "category": null,
+  "note": "无 run.end，下次启动前机器关机（事件 1074）"
+ },
+ "ac9a9c9c-382b-41af-8eb9-9b1da450ae52": {
+  "start": "2026-10-22T04:22:50.468000+00:00",
+  "duration_s": 3829.0,
+  "family": "clean",
+  "kind": "quit-forced",
+  "category": null,
+  "note": "用户关窗、host 超时被强杀"
+ },
+ "3b1fe241-190b-4f83-8537-557d4d0c6f0c": {
+  "start": "2026-10-22T05:27:52.064000+00:00",
+  "duration_s": 0.5,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "044992ca-2b05-4066-a184-14cb32713e5f": {
+  "start": "2026-10-22T05:27:55.674000+00:00",
+  "duration_s": 334.3,
+  "family": "clean",
+  "kind": "shutdown",
+  "category": null,
+  "note": "无 run.end，下次启动前机器关机（事件 1074）"
+ },
+ "7edcbade-48c1-4d4c-8d09-7465bf274b7b": {
+  "start": "2026-10-22T10:45:28.923000+00:00",
+  "duration_s": 7498.1,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "f4bbd84e-b662-4ed9-982d-f9144910ef72": {
+  "start": "2026-10-22T12:50:32.217000+00:00",
+  "duration_s": 2938.6,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "69f43611-0c67-4ddd-9ae2-d26d5605116e": {
+  "start": "2026-10-22T13:40:01.927000+00:00",
+  "duration_s": 11745.2,
+  "family": "clean",
+  "kind": "shutdown",
+  "category": null,
+  "note": "无 run.end，下次启动前机器关机（事件 1074）"
+ },
+ "66e003dc-a37d-4864-889e-94a5ced79b1f": {
+  "start": "2026-10-23T04:11:45.241000+00:00",
+  "duration_s": 5314.5,
+  "family": "clean",
+  "kind": "shutdown",
+  "category": null,
+  "note": "无 run.end，下次启动前机器关机（事件 1074）"
+ },
+ "4d8bf911-3d35-4042-a682-83d42ec5d1b1": {
+  "start": "2026-10-23T07:36:46.969000+00:00",
+  "duration_s": 3245.3,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "fe8639c1-66d9-4a3f-82ea-0c2b28727d76": {
+  "start": "2026-10-23T08:31:06.760000+00:00",
+  "duration_s": 164.2,
+  "family": "problem",
+  "kind": "crash",
+  "category": "plugin-import",
+  "note": "web boot: 1 entry did not activate"
+ },
+ "2761bebf-858a-45b8-878b-082e4bb77d6d": {
+  "start": "2026-10-23T08:33:51.412000+00:00",
+  "duration_s": 8.5,
+  "family": "problem",
+  "kind": "crash",
+  "category": "plugin-import",
+  "note": "web boot: 1 entry did not activate"
+ },
+ "fc5c9094-b964-4a92-a376-22dd2e2a3361": {
+  "start": "2026-10-23T08:41:25.341000+00:00",
+  "duration_s": 43.2,
+  "family": "unknown",
+  "kind": "unclean-unknown",
+  "category": null,
+  "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
+ },
+ "a685c39c-fdcd-46da-ae90-c4d6fe130c3d": {
+  "start": "2026-10-23T08:42:14.037000+00:00",
+  "duration_s": 178.1,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "7df7de02-87fd-4431-b18f-e0e99d639002": {
+  "start": "2026-10-23T08:45:15.089000+00:00",
+  "duration_s": 1145.0,
+  "family": "unknown",
+  "kind": "unclean-unknown",
+  "category": null,
+  "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
+ },
+ "d34a26e8-8416-484a-b5e2-bf8338466a09": {
+  "start": "2026-10-23T09:04:33.955000+00:00",
+  "duration_s": 252.7,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "0c83397a-5157-4689-a14a-0519fd9c64ac": {
+  "start": "2026-10-23T09:08:51.832000+00:00",
+  "duration_s": 1748.3,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "479b7b02-fcc3-4b8a-aa9b-7ae5154a0dc6": {
+  "start": "2026-10-23T09:38:11.615000+00:00",
+  "duration_s": 2749.0,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "26213e10-ef2e-4be9-90b3-2bc2c575de29": {
+  "start": "2026-10-23T10:24:01.899000+00:00",
+  "duration_s": 0.4,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "b1ff92e6-1981-4d3c-90a7-7386a532b409": {
+  "start": "2026-10-23T10:24:13.842000+00:00",
+  "duration_s": 9195.2,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "7e4e143c-d720-4128-8e1f-d8856675e4f8": {
+  "start": "2026-10-23T12:57:43.809000+00:00",
+  "duration_s": 9639.0,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "be3254fc-4915-4867-ada1-6b5f62343005": {
+  "start": "2026-10-23T15:38:26.699000+00:00",
+  "duration_s": 1856.0,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "f4332df4-750a-436e-b82c-7a205398714e": {
+  "start": "2026-10-23T16:09:31.356000+00:00",
+  "duration_s": 401.6,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "5dc08c7d-da63-4c9c-aba0-ec3f5ce0bf39": {
+  "start": "2026-10-23T16:16:13.918000+00:00",
+  "duration_s": 4389.6,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "3f89c17c-2ef4-445a-a6e1-3397d006b913": {
+  "start": "2026-10-23T17:29:24.849000+00:00",
+  "duration_s": 899.9,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "36343a12-0461-43ba-a648-fe8567bbef87": {
+  "start": "2026-10-23T17:44:27.287000+00:00",
+  "duration_s": 362.8,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "901351ef-63db-4c01-b916-ecbb7e38f153": {
+  "start": "2026-10-23T17:50:30.958000+00:00",
+  "duration_s": 389.9,
+  "family": "clean",
+  "kind": "quit-forced",
+  "category": null,
+  "note": "用户关窗、host 超时被强杀"
+ },
+ "61be29ec-0aca-4f06-a836-2010f8fa1a6b": {
+  "start": "2026-10-23T17:57:38.517000+00:00",
+  "duration_s": 161.5,
+  "family": "clean",
+  "kind": "quit-forced",
+  "category": null,
+  "note": "用户关窗、host 超时被强杀"
+ },
+ "71b1e550-1b47-4308-8a6e-e00c9ad70c49": {
+  "start": "2026-10-23T18:03:18.077000+00:00",
+  "duration_s": 107.9,
+  "family": "clean",
+  "kind": "quit-forced",
+  "category": null,
+  "note": "用户关窗、host 超时被强杀"
+ },
+ "3e65008e-5aa6-4863-a19a-d3eb32f86e7a": {
+  "start": "2026-10-23T18:05:05.982000+00:00",
+  "duration_s": 99.0,
+  "family": "clean",
+  "kind": "quit-forced",
+  "category": null,
+  "note": "用户关窗、host 超时被强杀"
+ },
+ "13c4e25e-32db-4f1f-8ee2-bd8733bd7ebd": {
+  "start": "2026-10-23T18:06:54.836000+00:00",
+  "duration_s": 82.1,
+  "family": "clean",
+  "kind": "quit-forced",
+  "category": null,
+  "note": "用户关窗、host 超时被强杀"
+ },
+ "dd783cad-73a9-4701-a624-dc0b2dffa789": {
+  "start": "2026-10-23T18:08:19.013000+00:00",
+  "duration_s": 196.2,
+  "family": "clean",
+  "kind": "shutdown",
+  "category": "host-exit",
+  "note": "失败发生在关机序列内（1074 18:11:34Z→6006）"
+ },
+ "fcf6c0eb-5bd4-434a-ab90-e0663956c6f3": {
+  "start": "2026-10-23T22:54:24.429000+00:00",
+  "duration_s": 18916.3,
+  "family": "clean",
+  "kind": "in-progress",
+  "category": null,
+  "note": "还在跑"
+ }
+}

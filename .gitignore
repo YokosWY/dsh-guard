@@ -1,0 +1,28 @@
+# 本机配置（用 config.example.json 复制出来改）
+config.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 运行时产物
+logs/
+state/
+quarantine/
+data/winevents.json
+
+# 备份数据（很大，且含真实配置/会话）
+lkg/
+sessions-backup/
+
+# 自动生成的报告
+reports/replay-*.md
+reports/safe-mode-*.md
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

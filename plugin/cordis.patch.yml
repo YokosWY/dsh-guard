@@ -1,0 +1,3 @@
+- insert:
+    - id: guard-ui
+      name: "@local/dsh-guard-ui"

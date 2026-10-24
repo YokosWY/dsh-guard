@@ -1,0 +1,8 @@
+{
+  "_note": "复制成 config.json 再改。所有字段可选，缺省自动探测；下划线开头的键会被忽略。",
+  "home": "D:\\AI\\DSH-NEXT",
+  "python": "C:\\Python312\\python.exe",
+  "pythonw": "C:\\Python312\\pythonw.exe",
+  "profile": "desktop",
+  "keep": 14
+}
