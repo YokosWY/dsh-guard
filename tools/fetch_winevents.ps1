@@ -1,4 +1,4 @@
-# 抓 Windows 系统事件到 data\winevents.json（判定器的三闸门要用）
+﻿# 抓 Windows 系统事件到 data\winevents.json（判定器的三闸门要用）
 # 用法: pwsh -NoProfile -File tools\fetch_winevents.ps1 [-Days 12]
 param([int]$Days = 12)
 
