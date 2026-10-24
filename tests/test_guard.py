@@ -159,6 +159,21 @@ class GuardTest(unittest.TestCase):
         finally:
             D.LOG_DIR = orig_logdir
 
+    def test_status_and_report(self):
+        """--status 打印摘要；--report 另存 markdown。"""
+        orig = (guard.REPORTS, guard.paths.targets)
+        guard.REPORTS = self.tmp / "reports"
+        try:
+            self.assertEqual(guard.status(emit_report=False), 0)
+            self.assertEqual(guard.status(emit_report=True), 0)
+            files = list(guard.REPORTS.glob("status-*.md"))
+            self.assertEqual(len(files), 1)
+            text = files[0].read_text(encoding="utf-8")
+            self.assertIn("dsh-guard 状态", text)
+            self.assertIn("| 目标 |", text)
+        finally:
+            guard.REPORTS, guard.paths.targets = orig
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

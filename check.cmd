@@ -8,27 +8,64 @@ set PY=python
 where python >nul 2>nul || set PY=py -3
 where %PY% >nul 2>nul || echo ERROR: python not found on PATH && exit /b 127
 
-echo === [1/7] unit tests: lkg ===
+set RC=0
+
+echo === [1/8] unit tests: lkg ===
 %PY% tests\test_lkg.py
+if errorlevel 1 set RC=1
 echo.
-echo === [2/7] unit tests: preflight ===
+
+echo === [2/8] unit tests: preflight ===
 %PY% tests\test_preflight.py
+if errorlevel 1 set RC=1
 echo.
-echo === [3/7] unit tests: guard ===
+
+echo === [3/8] unit tests: guard ===
 %PY% tests\test_guard.py
+if errorlevel 1 set RC=1
 echo.
-echo === [4/7] unit tests: sessions backup ===
+
+echo === [4/8] unit tests: sessions backup ===
 %PY% tests\test_sessions.py
+if errorlevel 1 set RC=1
 echo.
-echo === [5/7] unit tests: multi target ===
+
+echo === [5/8] unit tests: multi target ===
 %PY% tests\test_multi_target.py
+if errorlevel 1 set RC=1
 echo.
-echo === [6/7] end-to-end + replay ===
+
+echo === [6/8] end-to-end: rescue drill ===
 %PY% tests\test_rescue_e2e.py
-%PY% tests\replay.py --quiet
-echo replay exit %ERRORLEVEL%
+if errorlevel 1 set RC=1
 echo.
-echo === [7/7] preflight on current config ===
+
+echo === [7/8] replay historical runs ===
+%PY% tests\replay.py --quiet
+if errorlevel 1 set RC=1
+echo.
+
+echo === [8/8] preflight on current config ===
 %PY% preflight.py
+if errorlevel 2 set RC=1
+echo.
+
+echo ============================================================
+if "%RC%"=="0" goto PASS
+
+:FAIL
+echo RESULT: FAILED  -  see the step with errors above
+goto TAIL
+
+:PASS
+echo RESULT: ALL PASS  -  6 test groups + replay + preflight
+
+:TAIL
+echo ============================================================
+echo.
+echo Tip: python guard.py --status      health in one screen
+echo      python detect.py --all        both DSH instances
+echo      python detect.py --all --csv  export for spreadsheets
 echo.
 pause
+exit /b %RC%

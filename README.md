@@ -69,6 +69,26 @@ run 总数 84  需要处理 31  可由配置恢复 3
 
 完整逐条用 `python detect.py --list`。这一步只读，不改任何东西。
 
+## 日常看一眼
+
+```bat
+python guard.py --status        :: 开关 / 守护 / 每个 DSH 的启动数、事故数、上次扫描
+python guard.py --report        :: 同上，另存一份 markdown 到 reports/
+python detect.py --all --csv    :: 导出 88 条启动记录，Excel 能直接打开
+```
+
+`--status` 输出示例：
+
+```
+开关: 开（用户从界面切换）
+守护: 运行中 pid=39220，心跳 4s 前
+
+[next] D:\AI\DSH-NEXT
+  启动 88 次，事故 33 条，最近一次启动 10-24 15:09
+  结局: boot-fail=21  crash=3  ok=27  quit-forced=14  shutdown=13  unclean-unknown=9
+  上次扫描 2026-10-24T07:26:19+00:00（本轮新事故 0）
+```
+
 ## 边界
 
 - 不修 DSH 本体：壳页加载失败（`ERR_FAILED ... dsh-app://app/`）属应用内部，这里只出证据

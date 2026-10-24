@@ -231,7 +231,10 @@ def check_drift() -> None:
         return
     manifest = json.loads(snap.read_text(encoding="utf-8"))
     rows = lkg.diff_against_snapshot(manifest)
-    drift = [r for r in rows if r["state"] != "same" and r["mode"] == "restore"]
+    # storages 是运行期活写（插件状态、会话缓存），天天变，不该算配置漂移
+    drift = [r for r in rows
+             if r["state"] != "same" and r["mode"] == "restore"
+             and not r["path"].startswith("storages/")]
     if drift:
         add("WARN", "drift", f"相对基线（{base['id']}）有 {len(drift)} 个文件变了",
             "如果这些改动是你自己做的、且能正常启动，就打个新基线：python lkg.py snapshot"

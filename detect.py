@@ -373,6 +373,21 @@ def main(argv: list[str]) -> int:
         dump_json(groups)
         return 0
 
+    if "--csv" in argv:
+        import csv
+        w = csv.writer(sys.stdout, lineterminator="\n")
+        w.writerow(["target", "run_id", "start", "duration_s", "kind",
+                    "category", "repair", "boot", "shutdown", "host"])
+        for name, runs in groups.items():
+            for rid, r in sorted(
+                    runs.items(),
+                    key=lambda kv: kv[1].start or datetime.min.replace(tzinfo=timezone.utc)):
+                w.writerow([name, rid,
+                            r.start.isoformat() if r.start else "",
+                            round(r.duration, 1), r.kind, r.category or "",
+                            r.repair, r.gate_boot, r.gate_shutdown, r.gate_host])
+        return 0
+
     for name, runs in groups.items():
         s = summarize(runs)
         label = f"[{name}] " if len(groups) > 1 else ""

@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 0.2.2 — 2026-10-24
+
+可读性与巡检：
+
+- `guard.py --status`：开关、守护、每个 DSH 的启动数/事故数/结局分布/上次扫描，一屏看完
+- `guard.py --report`：同内容另存 `reports/status-<时间>.md`
+- `detect.py --csv`：导出逐次启动记录（9 列），Excel 可直接分析
+- `preflight.py` 漂移排除 `storages/`：插件状态天天变，算进去等于没有漂移检查
+- `自检.cmd` 末尾给一行结论：`RESULT: ALL PASS` / `FAILED`，并提示三条常用命令
+- 旧版 `scan.json` 自动迁移到多目标格式（旧记录归到第一个目标，不重复通知历史事故）
+- 测试 48 → 50 项（guard +1、multi-target +1）
+
 ## 0.2.1 — 2026-10-24
 
 打磨轮：把命令行做完整，修掉几个会静默错的行为。

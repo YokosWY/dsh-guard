@@ -42,6 +42,7 @@ SCAN = STATE_DIR / "scan.json"
 LOGS = ROOT / "logs"
 GUARD_LOG = LOGS / "guard.log"
 NOTICE_LOCK = STATE_DIR / ".notify-lock"
+REPORTS = ROOT / "reports"
 
 DEFAULT_INTERVAL = 120
 HEARTBEAT_EVERY = 30
@@ -133,7 +134,14 @@ def _load_scan_state() -> dict:
     if isinstance(raw.get("targets"), dict):
         return raw
     legacy = {"last_end": raw.get("last_end") or "", "seen": raw.get("seen") or []}
-    return {"version": 2, "targets": {"default": legacy} if legacy["last_end"] else {}}
+    if not legacy["last_end"]:
+        return {"version": 2, "targets": {}}
+    # 旧版只有一个目标；default 标签对应的就是配置里的第一个目标
+    try:
+        first = paths.targets()[0]["name"]
+    except (SystemExit, IndexError, KeyError):
+        first = "default"
+    return {"version": 2, "targets": {first: legacy}}
 
 
 def scan_once(notify_enabled: bool = True) -> dict:
@@ -322,6 +330,84 @@ def capture_evidence(rid: str, r, target_name: str = "default") -> Path | None:
         return None
 
 
+
+def status(emit_report: bool = False) -> int:
+    """一眼看全：开关、守护、每个目标最近的运行与事故。
+
+    --status 打到终端；--report 另存一份 markdown 到 reports/。
+    """
+    import detect
+
+    on, why = enabled()
+    beat = read_json(HEARTBEAT, {})
+    age = None
+    try:
+        age = round(time.time() - HEARTBEAT.stat().st_mtime)
+    except OSError:
+        pass
+    state = _load_scan_state()
+    targets = paths.targets()
+
+    lines = ["dsh-guard 状态", ""]
+    lines.append(f"开关: {'开' if on else '关'}" + (f"（{why}）" if why else ""))
+    if beat.get("pid") and age is not None and age < 90:
+        lines.append(f"守护: 运行中 pid={beat['pid']}，心跳 {age}s 前")
+    else:
+        lines.append("守护: 没在跑" + (f"（最后一次心跳 {age}s 前）" if age is not None else ""))
+
+    rows = []
+    for t in targets:
+        name, home = t["name"], Path(t["home"])
+        st = state["targets"].get(name) or {}
+        try:
+            runs = detect.analyse(home=home)
+        except SystemExit as e:
+            lines.append("")
+            lines.append(f"[{name}] ✗ {e}")
+            continue
+        kinds: dict[str, int] = {}
+        for r in runs.values():
+            kinds[r.kind] = kinds.get(r.kind, 0) + 1
+        problems = [r for r in runs.values() if r.kind in PROBLEM_KINDS]
+        newest = max((r.start for r in runs.values() if r.start), default=None)
+        rows.append((name, home, len(runs), kinds, len(problems), newest, st))
+
+    for name, home, total, kinds, nprob, newest, st in rows:
+        lines.append("")
+        lines.append(f"[{name}] {home}")
+        lines.append(f"  启动 {total} 次，事故 {nprob} 条"
+                     + (f"，最近一次启动 {newest.astimezone().strftime('%m-%d %H:%M')}" if newest else ""))
+        lines.append("  结局: " + "  ".join(f"{k}={v}" for k, v in sorted(kinds.items())))
+        if st.get("scanned_at"):
+            lines.append(f"  上次扫描 {st['scanned_at']}（本轮新事故 {st.get('new_problems', 0)}）")
+        else:
+            lines.append("  还没扫过（守护首轮只建基线）")
+
+    print("\n".join(lines))
+    if not emit_report:
+        return 0
+
+    REPORTS.mkdir(parents=True, exist_ok=True)
+    out = REPORTS / f"status-{utcnow().astimezone().strftime('%Y%m%d-%H%M')}.md"
+    md = [f"# dsh-guard 状态 {utcnow().astimezone().strftime('%Y-%m-%d %H:%M')}", "",
+          f"- 开关：{'开' if on else '关'}"]
+    if beat.get("pid") and age is not None and age < 90:
+        md.append(f"- 守护：pid={beat['pid']}，心跳 {age}s 前")
+    else:
+        md.append("- 守护：没在跑")
+    md += ["", "| 目标 | 启动 | 事故 | 最近启动 | 上次扫描 |", "|---|---|---|---|---|"]
+    for name, home, total, kinds, nprob, newest, st in rows:
+        md.append(f"| {name} | {total} | {nprob} | "
+                  f"{newest.astimezone().strftime('%m-%d %H:%M') if newest else '-'} | "
+                  f"{st.get('scanned_at', '未扫')} |")
+    md += ["", "## 结局分布", ""]
+    for name, home, total, kinds, nprob, newest, st in rows:
+        md.append(f"**{name}**：" + "，".join(f"{k} {v}" for k, v in sorted(kinds.items())))
+    out.write_text("\n".join(md) + "\n", encoding="utf-8")
+    print(f"\n报告已写 {out}")
+    return 0
+
+
 def main(argv: list[str]) -> int:
     interval = DEFAULT_INTERVAL
     if "--interval" in argv:
@@ -359,6 +445,9 @@ def main(argv: list[str]) -> int:
             log(f"--ensure: 补拉失败 {type(e).__name__}: {e}")
             return 1
         return 0
+
+    if "--status" in argv or "--report" in argv:
+        return status(emit_report="--report" in argv)
 
     if "--force" not in argv:
         other = _other_instance_running()

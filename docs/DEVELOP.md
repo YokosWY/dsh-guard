@@ -105,3 +105,10 @@
 
 迁移配置到官方版之前，把 preset 里 `toolFilter` / `persona` 整块删掉，否则会卡在「新建会话失败」。
 查法：`grep -n "toolFilter\|persona:" profiles/desktop/cordis.patch.yml`。
+
+## 12. 输出与漂移口径
+
+- `guard.py --status` / `--report`：巡检视图，读的是各目标的最新日志 + `state/scan.json`
+- `detect.py --csv`：一行一次启动，列固定为 `target,run_id,start,duration_s,kind,category,repair,boot,shutdown,host`
+- `preflight.py` 的漂移**排除 `storages/`**：那是运行期活写（插件状态、会话缓存），天天变，
+  算进去就永远是「有漂移」，等于没检查。要判断配置有没有被改坏，看 `profiles/` 与 `local-plugins/`

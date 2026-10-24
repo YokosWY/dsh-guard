@@ -90,6 +90,22 @@ class TargetsTest(unittest.TestCase):
         finally:
             sessions.SRC = orig_src
 
+    def test_csv_export(self):
+        import contextlib
+        import io
+        home = self.tmp / "home-csv"
+        (home / "logs").mkdir(parents=True)
+        line = {"time": "2026-10-24T01:00:00Z", "runId": "r1", "event": "run.start", "pid": 1}
+        (home / "logs" / "desktop-next-2026-10-24.0.jsonl").write_text(
+            json.dumps(line) + "\n", encoding="utf-8")
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = detect.main(["--home", str(home), "--csv"])
+        self.assertEqual(rc, 0)
+        out = buf.getvalue().strip().splitlines()
+        self.assertTrue(out[0].startswith("target,run_id,start"))
+        self.assertEqual(len(out), 2)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
