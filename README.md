@@ -111,4 +111,4 @@ python detect.py --all --csv    :: 导出 88 条启动记录，Excel 能直接�
 
 ## 许可
 
-MIT © 2026 Yokos，见 [LICENSE](LICENSE)。
+MIT © 2026 YokosWY，见 [LICENSE](LICENSE)。
