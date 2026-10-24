@@ -52,12 +52,15 @@ class GuardTest(unittest.TestCase):
         guard.notify = lambda title, body: self.notified.append((title, body))
         self.t0 = datetime(2026, 10, 24, 8, 0, tzinfo=timezone.utc)
         self.runs = {}
-        detect.analyse = lambda now=None: dict(self.runs)
+        detect.analyse = lambda now=None, home=None: dict(self.runs)
+        self._orig_targets = guard.paths.targets
+        guard.paths.targets = lambda: [{"name": "t", "home": self.tmp / "home"}]
 
     def tearDown(self):
         (guard.STATE_DIR, guard.CONTROL, guard.HEARTBEAT, guard.SCAN,
          guard.LOGS, guard.GUARD_LOG, guard.NOTICE_LOCK,
          lkg.LOGS, lkg._log_incident, guard.notify, detect.analyse) = self._orig
+        guard.paths.targets = self._orig_targets
 
     def incident_lines(self):
         p = guard.LOGS / "incidents.jsonl"
@@ -114,7 +117,7 @@ class GuardTest(unittest.TestCase):
         for i in range(450):
             self.runs[f"x{i}"] = make_run(f"x{i}", "ok", None, self.t0)
         guard.scan_once()
-        seen = json.loads(guard.SCAN.read_text(encoding="utf-8"))["seen"]
+        seen = json.loads(guard.SCAN.read_text(encoding="utf-8"))["targets"]["t"]["seen"]
         self.assertLessEqual(len(seen), 400)
 
     def test_single_instance_detected(self):

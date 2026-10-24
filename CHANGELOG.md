@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 0.2.0 — 2026-10-24
+
+多实例支持：同一台机器上的 DSH NEXT 与官方版可以一起盯。
+
+- `config.json` 增加 `targets`；`detect.py --all` / `--home` 逐目标判定
+- `guard.py` 每轮遍历所有目标，`scan.json` 按 target 分开存，新目标首次跑只建基线不通知
+- `lkg.py` / `sessions.py` 增加 `--label`、`--home`：第一个目标用默认目录，其余按名字分目录
+- 新增 `tools/backup_all.py`：每日任务改为逐个目标备份（配置快照 + 会话增量）
+- 插件可装到官方版：0.2.1-rc.2 的日志事件与头部插槽与 NEXT 一致，实测可加载
+- 测试 38 → 43 项（新增 `tests/test_multi_target.py` 5 项）
+
 ## 0.1.0 — 2026-10-24
 
 首个可用版本。全部能力都在这台机器上实测过，不是只写了代码。

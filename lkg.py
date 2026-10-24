@@ -49,6 +49,15 @@ QUARANTINE = ROOT / "quarantine"
 LOGS = ROOT / "logs"
 BASELINE = LKG_DIR / "baseline.json"
 LOCK = LKG_DIR / ".lock"
+
+def repo_dir(label: str = "default") -> Path:
+    """按目标标签取备份仓。default 沿用老路径，其他目标放 lkg/<label>/。"""
+    return LKG_DIR if (not label or label == "default") else (LKG_DIR / label)
+
+
+def baseline_file(label: str = "default") -> Path:
+    return repo_dir(label) / "baseline.json"
+
 CONFIG = ROOT / "config.json"
 
 KEEP = 14
@@ -173,14 +182,14 @@ def _content_signature(files: list[dict]) -> str:
 
 
 def snapshot(reason: str = "manual", cfg: dict | None = None, quiet: bool = False,
-             skip_identical: bool = False) -> dict:
+             skip_identical: bool = False, label: str = "default") -> dict:
     cfg = cfg or load_config()
     home = Path(cfg["home"])
     sid = ts_id()
-    dest = LKG_DIR / sid
+    dest = repo_dir(label) / sid
     if dest.exists():
         sid += "-b"
-        dest = LKG_DIR / sid
+        dest = repo_dir(label) / sid
     files = []
     for item in expand_items(cfg):
         for fp in iter_files(item):
@@ -199,7 +208,7 @@ def snapshot(reason: str = "manual", cfg: dict | None = None, quiet: bool = Fals
     if skip_identical:
         # 每日定时任务用这个：内容没变就不落新快照，否则 14 份全被同样的内容顶掉，
         # 真出事时反而没有「上周那一版」可回。
-        snaps = list_snapshots()
+        snaps = list_snapshots(label)
         if snaps and _content_signature(snaps[0]["files"]) == _content_signature(files):
             if not quiet:
                 print(f"内容与最新快照 {snaps[0]['id']} 一致，跳过（不占位）")
@@ -210,6 +219,7 @@ def snapshot(reason: str = "manual", cfg: dict | None = None, quiet: bool = Fals
         "id": sid,
         "created": utcnow().isoformat(timespec="seconds"),
         "reason": reason,
+        "label": label,
         "home": str(home),
         "profile": cfg.get("profile", "desktop"),
         "file_count": len(files),
@@ -218,16 +228,16 @@ def snapshot(reason: str = "manual", cfg: dict | None = None, quiet: bool = Fals
     }
     (dest / "manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8")
-    prune(int(cfg.get("keep", KEEP)), quiet=quiet)
+    prune(int(cfg.get("keep", KEEP)), quiet=quiet, label=label)
     if not quiet:
         print(f"✅ 快照 {sid}  reason={reason}  {len(files)} 个文件  "
               f"{manifest['bytes']/1048576:.2f} MB")
     return manifest
 
 
-def list_snapshots() -> list[dict]:
+def list_snapshots(label: str = "default") -> list[dict]:
     out = []
-    for d in sorted(LKG_DIR.glob("*/")):
+    for d in sorted(repo_dir(label).glob("*/")):
         mf = d / "manifest.json"
         if mf.exists():
             try:
@@ -238,14 +248,14 @@ def list_snapshots() -> list[dict]:
     return out
 
 
-def prune(keep: int, quiet: bool = True) -> list[str]:
+def prune(keep: int, quiet: bool = True, label: str = "default") -> list[str]:
     snaps = list_snapshots()
-    base_id = (load_baseline() or {}).get("id")
+    base_id = (load_baseline(label) or {}).get("id")
     removed = []
     for m in snaps[keep:]:
         if m["id"] == base_id:
             continue
-        d = LKG_DIR / m["id"]
+        d = repo_dir(label) / m["id"]
         shutil.rmtree(d, ignore_errors=True)
         removed.append(m["id"])
     if removed and not quiet:
@@ -255,16 +265,18 @@ def prune(keep: int, quiet: bool = True) -> list[str]:
 
 # ---------------------------------------------------------------- 基线
 
-def load_baseline() -> dict | None:
-    if BASELINE.exists():
+def load_baseline(label: str = "default") -> dict | None:
+    bf = baseline_file(label)
+    if bf.exists():
         try:
-            return json.loads(BASELINE.read_text(encoding="utf-8-sig"))
+            return json.loads(bf.read_text(encoding="utf-8-sig"))
         except Exception:
             return None
     return None
 
 
-def promote(sid: str, yes: bool = False, note: str = "", force: bool = False) -> dict:
+def promote(sid: str, yes: bool = False, note: str = "", force: bool = False,
+            label: str = "default") -> dict:
     """立为基线。
 
     提升条件（除非 --force）：
@@ -272,7 +284,7 @@ def promote(sid: str, yes: bool = False, note: str = "", force: bool = False) ->
       2. 最近一次崩溃之后，至少又成功跑过 3 次；或当前这次已经稳定运行 ≥ 6 小时
     不满足就拒绝，并说明缺哪条。
     """
-    snap = LKG_DIR / sid
+    snap = repo_dir(label) / sid
     if not (snap / "manifest.json").exists():
         raise SystemExit(f"✗ 没有快照 {sid}")
     manifest = json.loads((snap / "manifest.json").read_text(encoding="utf-8"))
@@ -298,7 +310,8 @@ def promote(sid: str, yes: bool = False, note: str = "", force: bool = False) ->
         "note": note,
         "file_count": manifest["file_count"],
     }
-    BASELINE.write_text(json.dumps(baseline, ensure_ascii=False, indent=1), encoding="utf-8")
+    baseline["label"] = label
+    baseline_file(label).write_text(json.dumps(baseline, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"✅ 基线 = {sid}（{manifest['created']}）{note}")
     return baseline
 
@@ -343,8 +356,8 @@ def diff_against_snapshot(manifest: dict, cfg: dict | None = None) -> list[dict]
     return rows
 
 
-def verify_snapshot(sid: str) -> int:
-    snap = LKG_DIR / sid
+def verify_snapshot(sid: str, label: str = "default") -> int:
+    snap = repo_dir(label) / sid
     mf = snap / "manifest.json"
     if not mf.exists():
         print(f"✗ 没有快照 {sid}")
@@ -387,8 +400,9 @@ def _acquire_lock() -> Path:
     return LOCK
 
 
-def restore(sid: str, apply: bool = False, include_reference: bool = False) -> int:
-    snap = LKG_DIR / sid
+def restore(sid: str, apply: bool = False, include_reference: bool = False,
+            label: str = "default") -> int:
+    snap = repo_dir(label) / sid
     mf = snap / "manifest.json"
     if not mf.exists():
         print(f"✗ 没有快照 {sid}")
@@ -494,6 +508,18 @@ def main(argv: list[str]) -> int:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:
         pass
+    label = "default"
+    if "--label" in argv:
+        i = argv.index("--label")
+        label = argv[i + 1]
+        del argv[i:i + 2]
+    if "--home" in argv:
+        i = argv.index("--home")
+        home_override = argv[i + 1]
+        del argv[i:i + 2]
+        global HOME
+        HOME = Path(home_override)
+
     ap = argparse.ArgumentParser(prog="lkg.py")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -521,11 +547,11 @@ def main(argv: list[str]) -> int:
 
     a = ap.parse_args(argv)
     if a.cmd == "list":
-        snaps = list_snapshots()
+        snaps = list_snapshots(label)
         if not snaps:
             print("（还没有快照）先跑 python lkg.py snapshot")
             return 0
-        base = (load_baseline() or {}).get("id")
+        base = (load_baseline(label) or {}).get("id")
         for m in snaps:
             flag = "★" if m["id"] == base else " "
             print(f"{m['id']} {flag} {m['created']}  {m['file_count']:3d} 文件  "
@@ -536,14 +562,14 @@ def main(argv: list[str]) -> int:
         print(json.dumps(b, ensure_ascii=False, indent=1) if b else "（还没有基线）")
         return 0
     if a.cmd == "snapshot":
-        snapshot(a.reason, quiet=a.quiet, skip_identical=a.skip_identical)
+        snapshot(a.reason, quiet=a.quiet, skip_identical=a.skip_identical, label=label)
         return 0
     if a.cmd == "verify":
-        return verify_snapshot(a.id)
+        return verify_snapshot(a.id, label=label)
     if a.cmd == "restore":
-        return restore(a.id, apply=a.apply, include_reference=a.include_reference)
+        return restore(a.id, apply=a.apply, include_reference=a.include_reference, label=label)
     if a.cmd == "promote":
-        promote(a.id, yes=a.yes, note=a.note, force=a.force)
+        promote(a.id, yes=a.yes, note=a.note, force=a.force, label=label)
         return 0
     return 2
 

@@ -19,7 +19,27 @@ dsh-guard 是给 DSH NEXT（DeepSeek Harness 桌面版）做崩溃判定与恢�
 
 - Windows 10/11
 - Python 3.11 及以上（仅标准库；`psutil`、`PyYAML` 可选）
-- DSH NEXT 安装在同一台机器上（工具读它的 `logs/`、`profiles/`、`sessions/`）
+- DSH 安装在同一台机器上（工具读它的 `logs/`、`profiles/`、`sessions/`）
+- 官方版与 NEXT 可以同时装：在 `config.json` 的 `targets` 里各写一条，判定、守护、备份都按目标分开
+
+## 多实例（NEXT + 官方版）
+
+```json
+"targets": [
+  { "name": "next",     "home": "D:\\AI\\DSH-NEXT" },
+  { "name": "official", "home": "D:\\AI\\DSH-official\\home" }
+]
+```
+
+| 能力 | 多实例行为 |
+|---|---|
+| 判定 | `python detect.py --all` 逐目标输出；`--home <path>` 只看一个 |
+| 守护 | 每轮逐个目标扫描，`scan.json` 按 target 分开存，首次跑只建基线不通知 |
+| 备份 | 第一个目标落 `lkg/`、`sessions-backup/`（默认标签），其余落 `lkg/<name>/`、`sessions-backup/<name>/` |
+| 界面开关 | 每套 DSH 各装一次插件；两个桥读同一份 `state/control.json`，开关对两套同时生效 |
+
+官方版是 0.2.1-rc.2 时实测可用：日志事件词表与 NEXT 一致（`electron/run.start`、`desktop/host.start.start`、`desktop/message`），头部插槽 `conversation.session.header.actions` 也存在。
+
 
 ## 安装
 

@@ -4,5 +4,9 @@
   "python": "C:\\Python312\\python.exe",
   "pythonw": "C:\\Python312\\pythonw.exe",
   "profile": "desktop",
-  "keep": 14
+  "keep": 14,
+  "_targets": "同时盯多个 DSH 实例时填这里。备份按 name 分子目录：lkg/<name>、sessions-backup/<name>。",
+  "targets": [
+    { "name": "next", "home": "D:\\AI\\DSH-NEXT" }
+  ]
 }

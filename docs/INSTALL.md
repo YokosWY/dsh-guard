@@ -94,13 +94,30 @@ schtasks /delete /tn "DSH-Guard-Daily-Snapshot" /f
 schtasks /delete /tn "DSH-Guard-Ensure" /f
 ```
 
-## 6. 自检
+## 6. 第二套 DSH（官方版与 NEXT 共存）
+
+`config.json` 里写两条目标：
+
+```json
+"targets": [
+  { "name": "next",     "home": "%DSH_HOME%-next" },
+  { "name": "official", "home": "%DSH_HOME%-official" }
+]
+```
+
+- `detect.py --all` 逐目标判定；`guard.py` 每轮都扫，`scan.json` 按 target 分开
+- 备份：第一个目标用默认目录，其余落 `lkg/<name>/`、`sessions-backup/<name>/`
+- 界面开关要对每套各装一次（三件事同上，路径换成那套的 home）
+- 官方版 0.2.1-rc.2 实测：日志事件与插槽都与 NEXT 一致，插件可直接装
+
+## 7. 自检
 
 ```bat
 python tests\test_lkg.py
 python tests\test_preflight.py
 python tests\test_guard.py
 python tests\test_sessions.py
+python tests\test_multi_target.py
 python tests\test_rescue_e2e.py
 python tests\replay.py
 ```

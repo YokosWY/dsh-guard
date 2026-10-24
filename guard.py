@@ -127,71 +127,101 @@ def notify(title: str, body: str) -> None:
         log(f"通知失败：{e}")
 
 
-def scan_once(notify_enabled: bool = True) -> dict:
-    """扫一轮：找出「上次扫过之后」的新问题 run。
+def _load_scan_state() -> dict:
+    """扫描状态按 target 分开存；兼容旧格式（顶层 last_end/seen）。"""
+    raw = read_json(SCAN, {})
+    if isinstance(raw.get("targets"), dict):
+        return raw
+    legacy = {"last_end": raw.get("last_end") or "", "seen": raw.get("seen") or []}
+    return {"version": 2, "targets": {"default": legacy} if legacy["last_end"] else {}}
 
-    首次运行（没有 scan.json）只建立历史基线，不逐条通知 —— 否则一装完就会
-    把过去 8 天的 30 条事故全弹一遍，纯噪音。
+
+def scan_once(notify_enabled: bool = True) -> dict:
+    """扫一轮：逐个 DSH 目标，找出「上次扫过之后」的新问题 run。
+
+    首次跑某个目标（状态里没有它）只建立历史基线，不逐条通知 —— 否则一装完就会
+    把历史事故全弹一遍，纯噪音。
     """
     import detect
 
-    runs = detect.analyse()
-    first_run = not SCAN.exists()
-    state = read_json(SCAN, {"last_end": "", "seen": []})
-    last_end = state.get("last_end") or ""
-    seen = set(state.get("seen") or [])
-    cutoff = None
-    if last_end:
-        try:
-            cutoff = datetime.fromisoformat(last_end)
-        except ValueError:
-            cutoff = None
+    state = _load_scan_state()
+    fresh_all = []
+    seeded_all = 0
+    totals = 0
 
-    if first_run:
-        problems = [r for r in runs.values() if r.kind in PROBLEM_KINDS]
-        newest = max([r.end for r in runs.values()], default=None) if runs else None
-        write_json(SCAN, {
-            "last_end": (newest or utcnow()).isoformat(timespec="seconds"),
-            "seen": sorted(runs.keys())[-400:],
+    for t in paths.targets():
+        name, home = t["name"], t["home"]
+        runs = detect.analyse(home=home)
+        totals += len(runs)
+        st = state["targets"].get(name) or {}
+        first_run = not st or not st.get("last_end")
+        seen = set(st.get("seen") or [])
+        cutoff = None
+        if st.get("last_end"):
+            try:
+                cutoff = datetime.fromisoformat(st["last_end"])
+            except ValueError:
+                cutoff = None
+
+        if first_run:
+            problems = [r for r in runs.values() if r.kind in PROBLEM_KINDS]
+            seeded_all += len(problems)
+            newest = max([r.end for r in runs.values()], default=None) if runs else None
+            state["targets"][name] = {
+                "last_end": (newest or utcnow()).isoformat(timespec="seconds"),
+                "seen": sorted(runs.keys())[-400:],
+                "scanned_at": utcnow().isoformat(timespec="seconds"),
+                "runs": len(runs),
+                "new_problems": 0,
+                "seeded": len(problems),
+            }
+            log(f"[{name}] 首次运行：建立历史基线（{len(runs)} 次启动、{len(problems)} 条历史事故），不通知")
+            continue
+
+        fresh = []
+        for rid, r in runs.items():
+            if rid in seen or r.kind not in PROBLEM_KINDS:
+                continue
+            if cutoff and r.end <= cutoff:
+                continue
+            fresh.append((r.end, rid, r))
+        fresh.sort(key=lambda x: x[0])
+
+        for _end, rid, r in fresh:
+            rec = {
+                "t": utcnow().isoformat(timespec="seconds"),
+                "kind": r.kind,
+                "category": r.category,
+                "home": name,
+                "run": rid[:8],
+                "started": r.start.isoformat() if r.start else None,
+                "duration_s": round(r.duration, 1),
+                "repair": r.repair,
+                "detail": (r.evidence[0] if r.evidence else "")[:300],
+            }
+            if r.kind == "unclean-unknown":
+                ev = capture_evidence(rid, r, name)
+                if ev:
+                    rec["evidence"] = str(ev)
+            lkg._log_incident(f"detected:{r.kind}", rid[:8],
+                              f"[{name}] {rec['detail']}", [r.category or "-"])
+            log(f"[{name}] 新事故 {r.kind}/{r.category} run={rid[:8]} dur={r.duration:.1f}s"
+                + (f"；现场存 {rec['evidence']}" if rec.get("evidence") else ""))
+            fresh_all.append((name, rid, r))
+
+        newest_end = max([r.end for r in runs.values()], default=None) if runs else None
+        state["targets"][name] = {
+            "last_end": (newest_end or utcnow()).isoformat(timespec="seconds"),
+            "seen": sorted(seen | set(runs.keys()))[-400:],
             "scanned_at": utcnow().isoformat(timespec="seconds"),
             "runs": len(runs),
-            "new_problems": 0,
-            "seeded": len(problems),
-        })
-        log(f"首次运行：已建立历史基线（{len(runs)} 次启动、其中 {len(problems)} 条历史事故），不逐条通知")
-        return {"seeded": len(problems), "new_problems": 0, "runs": len(runs), "fresh": []}
-
-    fresh = []
-    for rid, r in runs.items():
-        if rid in seen or r.kind not in PROBLEM_KINDS:
-            continue
-        if cutoff and r.end <= cutoff:
-            continue
-        fresh.append((r.end, rid, r))
-    fresh.sort(key=lambda x: x[0])
-
-    for end, rid, r in fresh:
-        rec = {
-            "t": utcnow().isoformat(timespec="seconds"),
-            "kind": r.kind,
-            "category": r.category,
-            "run": rid[:8],
-            "started": r.start.isoformat() if r.start else None,
-            "duration_s": round(r.duration, 1),
-            "repair": r.repair,
-            "detail": (r.evidence[0] if r.evidence else "")[:300],
+            "new_problems": len(fresh),
         }
-        # 「无证据的死法」最需要现场：留一份进程/日志/事件快照，供以后人工看
-        if r.kind == "unclean-unknown":
-            ev = capture_evidence(rid, r)
-            if ev:
-                rec["evidence"] = str(ev)
-        lkg._log_incident(f"detected:{r.kind}", rid[:8], rec["detail"], [r.category or "-"])
-        log(f"新事故 {r.kind}/{r.category} run={rid[:8]} dur={r.duration:.1f}s"
-            + (f"；现场存 {rec['evidence']}" if rec.get("evidence") else ""))
 
-    if fresh and notify_enabled:
-        end, rid, r = fresh[-1]
+    write_json(SCAN, state)
+
+    if fresh_all and notify_enabled:
+        name, rid, r = fresh_all[-1]
         hint = {
             "shell-load": "壳页没起来（profile 没加载）。完全退出 DSH 后跑 rescue.cmd --safe-mode。",
             "plugin-import": "插件加载失败。完全退出后跑 rescue.cmd --apply 从基线还原。",
@@ -199,22 +229,14 @@ def scan_once(notify_enabled: bool = True) -> dict:
             "host-exit": "后端进程退出了。先 rescue.cmd --safe-mode 进去看看。",
             "silent": "没有证据的死法，已记录，等你人工看。",
         }.get(r.category or "", "已记录，等你人工看。")
-        notify(f"DSH 出事：{r.kind}/{r.category or '未知'}",
+        notify(f"DSH 出事：{r.kind}/{r.category or '未知'}（{name}）",
                f"{r.start.strftime('%m-%d %H:%M') if r.start else ''} 这次启动异常，"
-               f"持续 {r.duration:.0f}s。\n{hint}")
+               + f"持续 {r.duration:.0f}s。" + "\n" + hint)
 
-    newest_end = max([r.end for r in runs.values()], default=None) if runs else None
-    state = {
-        "last_end": (newest_end or utcnow()).isoformat(timespec="seconds"),
-        "seen": sorted(seen | set(runs.keys()))[-400:],
-        "scanned_at": utcnow().isoformat(timespec="seconds"),
-        "runs": len(runs),
-        "new_problems": len(fresh),
-    }
-    write_json(SCAN, state)
-    return {"new_problems": len(fresh), "runs": len(runs), "fresh": [
-        {"run": rid[:8], "kind": r.kind, "category": r.category, "dur": round(r.duration, 1)}
-        for _e, rid, r in fresh]}
+    return {"seeded": seeded_all, "new_problems": len(fresh_all), "runs": totals,
+            "fresh": [{"home": n, "run": rid[:8], "kind": r.kind,
+                       "category": r.category, "dur": round(r.duration, 1)}
+                      for n, rid, r in fresh_all]}
 
 
 def _other_instance_running() -> int | None:
@@ -238,22 +260,25 @@ def _other_instance_running() -> int | None:
     return None
 
 
-def capture_evidence(rid: str, r) -> Path | None:
+def capture_evidence(rid: str, r, target_name: str = "default") -> Path | None:
     """给「无 run.end、无失败、无关机」的 run 留现场。
 
     这类死法日志里什么都没留，只能靠周边证据（文本日志尾巴 + 当时的进程表）反推。
-    写 logs/unclean-<run8>-<时间>.log，一条事故一个文件。
+    写 logs/unclean-<target>-<run8>-<时间>.log，一条事故一个文件。
     """
     try:
         import detect
     except Exception:
         return None
     stamp = utcnow().astimezone().strftime("%Y%m%d-%H%M%S")
-    out = LOGS / f"unclean-{rid[:8]}-{stamp}.log"
+    out = LOGS / f"unclean-{target_name}-{rid[:8]}-{stamp}.log"
+    log_dir = (Path(r.home) / "logs") if getattr(r, "home", "") else detect.LOG_DIR
     try:
         LOGS.mkdir(parents=True, exist_ok=True)
         with out.open("w", encoding="utf-8") as f:
             f.write(f"# unclean-unknown 现场\n")
+            f.write(f"target: {target_name}\n")
+            f.write(f"home: {r.home or detect.HOME}\n")
             f.write(f"run: {rid}\n")
             f.write(f"start: {r.start.isoformat() if r.start else '?'}\n")
             f.write(f"end:   {r.end.isoformat() if r.end else '?'}\n")
@@ -269,7 +294,7 @@ def capture_evidence(rid: str, r) -> Path | None:
                     continue
 
             f.write("\n## 文本日志尾部（desktop-next.log 最后 60 行）\n")
-            text_log = detect.LOG_DIR / "desktop-next.log"
+            text_log = log_dir / "desktop-next.log"
             try:
                 lines = text_log.read_text(encoding="utf-8", errors="ignore").splitlines()
                 f.write("\n".join(lines[-60:]) + "\n")

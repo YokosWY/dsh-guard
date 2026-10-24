@@ -73,6 +73,7 @@ class Run:
     start: datetime | None = None
     end: datetime | None = None
     next_start: datetime | None = None
+    home: str = ""
     main_pid: int | None = None
     # 标志
     has_host_start: bool = False
@@ -293,16 +294,27 @@ def classify(r: Run, winevents: list[dict], now: datetime) -> Run:
     return r
 
 
-def analyse(now: datetime | None = None) -> dict[str, Run]:
+def analyse(now: datetime | None = None, home: Path | None = None) -> dict[str, Run]:
+    """按 home 分析一个 DSH 实例。home 为空时用默认目标。"""
     now = now or datetime.now(timezone.utc)
+    log_dir = (Path(home) / "logs") if home else LOG_DIR
     winevents = load_winevents()
-    runs = load_runs()
+    runs = load_runs(log_dir)
     ordered = sorted(runs.values(), key=lambda r: r.start or now)
     for a, b in zip(ordered, ordered[1:]):
         a.next_start = b.start
     for r in runs.values():
+        r.home = str(home) if home else str(HOME)
         classify(r, winevents, now)
     return runs
+
+
+def analyse_all(now: datetime | None = None) -> dict[str, dict[str, Run]]:
+    """按 paths.targets() 逐个分析；键是 target 名。"""
+    out = {}
+    for t in paths.targets():
+        out[t["name"]] = analyse(now=now, home=t["home"])
+    return out
 
 
 def summarize(runs: dict[str, Run]) -> dict:
@@ -325,29 +337,54 @@ def main(argv: list[str]) -> int:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:
         pass
-    runs = analyse()
-    s = summarize(runs)
-    if "--json" in argv:
-        out = {rid: {
-            "start": r.start.isoformat() if r.start else None,
-            "duration_s": round(r.duration, 1),
-            "kind": r.kind,
-            "category": r.category,
-            "repair": r.repair,
-            "fail_delay": round(r.fail_delay, 1) if r.fail_delay is not None else None,
-            "gates": {"boot": r.gate_boot, "shutdown": r.gate_shutdown, "host": r.gate_host},
-            "evidence": r.evidence,
-        } for rid, r in sorted(runs.items(), key=lambda kv: kv[1].start or datetime.min.replace(tzinfo=timezone.utc))}
+
+    def dump_json(groups: dict[str, dict[str, Run]]) -> None:
+        out = {}
+        for name, runs in groups.items():
+            out[name] = {rid: {
+                "home": r.home,
+                "start": r.start.isoformat() if r.start else None,
+                "duration_s": round(r.duration, 1),
+                "kind": r.kind,
+                "category": r.category,
+                "repair": r.repair,
+                "fail_delay": round(r.fail_delay, 1) if r.fail_delay is not None else None,
+                "gates": {"boot": r.gate_boot, "shutdown": r.gate_shutdown, "host": r.gate_host},
+                "evidence": r.evidence,
+            } for rid, r in sorted(
+                runs.items(),
+                key=lambda kv: kv[1].start or datetime.min.replace(tzinfo=timezone.utc))}
         print(json.dumps(out, ensure_ascii=False, indent=1))
+
+    # --all 逐个目标；--home 指定单个；否则默认目标
+    if "--all" in argv:
+        groups = analyse_all()
+    elif "--home" in argv:
+        home = Path(argv[argv.index("--home") + 1])
+        groups = {home.name: analyse(home=home)}
+    else:
+        groups = {"default": analyse()}
+
+    if "--json" in argv:
+        dump_json(groups)
         return 0
-    print(f"run 总数 {s['runs']}  需要处理 {s['real_problems']}  可由配置恢复 {s['recoverable_by_config']}")
-    print("结局分布:", s["kinds"])
-    print("崩因分布:", s["categories"])
-    if "--list" in argv:
-        for rid, r in sorted(runs.items(), key=lambda kv: kv[1].start or datetime.min.replace(tzinfo=timezone.utc)):
-            stamp = r.start.strftime("%m-%d %H:%M") if r.start else "?"
-            print(f"  {stamp} {rid[:8]} {r.kind:16s} {str(r.category or '-'):14s} "
-                  f"dur={r.duration:7.1f}s repair={r.repair}")
+
+    for name, runs in groups.items():
+        s = summarize(runs)
+        label = f"[{name}] " if len(groups) > 1 else ""
+        print(f"{label}run 总数 {s['runs']}  需要处理 {s['real_problems']}  "
+              f"可由配置恢复 {s['recoverable_by_config']}")
+        print(f"{label}结局分布: {s['kinds']}")
+        print(f"{label}崩因分布: {s['categories']}")
+        if "--list" in argv:
+            for rid, r in sorted(
+                    runs.items(),
+                    key=lambda kv: kv[1].start or datetime.min.replace(tzinfo=timezone.utc)):
+                stamp = r.start.strftime("%m-%d %H:%M") if r.start else "?"
+                print(f"  {stamp} {rid[:8]} {r.kind:16s} {str(r.category or '-'):14s} "
+                      f"dur={r.duration:7.1f}s repair={r.repair}")
+        if len(groups) > 1:
+            print()
     return 0
 
 

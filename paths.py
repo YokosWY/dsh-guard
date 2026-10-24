@@ -63,8 +63,31 @@ def _candidates() -> list[Path]:
     return out
 
 
+def targets() -> list[dict]:
+    """要盯的 DSH 实例列表。
+
+    配置里写 targets 就用它（可以同时盯 NEXT 和官方版）：
+        "targets": [{"name": "next", "home": "..."}, {"name": "official", "home": "..."}]
+    没写就退化成一个默认目标（home 解析同 dsh_home）。
+    """
+    cfg = _config()
+    raw = cfg.get("targets")
+    if isinstance(raw, list) and raw:
+        out = []
+        for item in raw:
+            if not isinstance(item, dict):
+                continue
+            home = item.get("home")
+            if not home:
+                continue
+            out.append({"name": str(item.get("name") or "default"), "home": Path(home)})
+        if out:
+            return out
+    return [{"name": "default", "home": dsh_home()}]
+
+
 def dsh_home() -> Path:
-    """DSH 的数据目录（logs / profiles / storages / sessions 都在它下面）。"""
+    """默认的 DSH 数据目录（logs / profiles / storages / sessions 都在它下面）。"""
     for key in ("DSH_GUARD_HOME", "DSH_HOME"):
         val = os.environ.get(key)
         if val:

@@ -20,10 +20,11 @@ echo.
 echo === [4/7] unit tests: sessions backup ===
 %PY% tests\test_sessions.py
 echo.
-echo === [5/7] end-to-end: rescue drill ===
-%PY% tests\test_rescue_e2e.py
+echo === [5/7] unit tests: multi target ===
+%PY% tests\test_multi_target.py
 echo.
-echo === [6/7] replay 78 historical runs ===
+echo === [6/7] end-to-end + replay ===
+%PY% tests\test_rescue_e2e.py
 %PY% tests\replay.py --quiet
 echo replay exit %ERRORLEVEL%
 echo.

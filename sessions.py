@@ -37,6 +37,12 @@ except Exception:
 
 SRC = paths.dsh_home() / "sessions"
 DEST = ROOT / "sessions-backup"
+
+
+def repo_dir(label: str = "default") -> Path:
+    """按目标标签取备份目录；default 沿用老路径（测试会直接改 DEST）。"""
+    return DEST if (not label or label == "default") else (DEST / label)
+DEST = ROOT / "sessions-backup"
 KEEP = 7
 SKIP_SUFFIX = {".tmp", ".lock"}
 
@@ -45,11 +51,12 @@ def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def list_backups() -> list[dict]:
+def list_backups(label: str = "default") -> list[dict]:
     out = []
-    if not DEST.exists():
+    root = repo_dir(label)
+    if not root.exists():
         return out
-    for d in sorted(DEST.glob("*/")):
+    for d in sorted(root.glob("*/")):
         mf = d / "manifest.json"
         try:
             out.append(json.loads(mf.read_text(encoding="utf-8")))
@@ -59,16 +66,16 @@ def list_backups() -> list[dict]:
     return out
 
 
-def snapshot(quiet: bool = False) -> dict:
+def snapshot(quiet: bool = False, label: str = "default") -> dict:
     if not SRC.exists():
         raise SystemExit(f"✗ 源目录不存在：{SRC}")
     sid = utcnow().astimezone().strftime("%Y%m%d-%H%M%S")
-    dest = DEST / sid
+    dest = repo_dir(label) / sid
     if dest.exists():
         sid += "-b"
         dest = DEST / sid
-    prev = list_backups()
-    prev_dir = DEST / prev[0]["id"] if prev else None
+    prev = list_backups(label)
+    prev_dir = repo_dir(label) / prev[0]["id"] if prev else None
 
     files, linked, copied, bytes_new = [], 0, 0, 0
     for dirpath, dirnames, filenames in os.walk(SRC):
@@ -116,20 +123,20 @@ def snapshot(quiet: bool = False) -> dict:
     }
     (dest / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=1),
                                         encoding="utf-8")
-    prune()
+    prune(label=label)
     if not quiet:
         print(f"✅ 会话备份 {sid}：{len(files)} 个文件，"
               f"新增 {bytes_new/1048576:.2f} MB（硬链接复用 {linked} 个）")
     return manifest
 
 
-def prune(keep: int = KEEP) -> None:
-    for m in list_backups()[keep:]:
-        shutil.rmtree(DEST / m["id"], ignore_errors=True)
+def prune(keep: int = KEEP, label: str = "default") -> None:
+    for m in list_backups(label)[keep:]:
+        shutil.rmtree(repo_dir(label) / m["id"], ignore_errors=True)
 
 
-def restore(sid: str, apply: bool = False) -> int:
-    snap = DEST / sid
+def restore(sid: str, apply: bool = False, label: str = "default") -> int:
+    snap = repo_dir(label) / sid
     mf = snap / "manifest.json"
     if not mf.exists():
         print(f"✗ 没有备份 {sid}")
@@ -175,6 +182,13 @@ def restore(sid: str, apply: bool = False) -> int:
 
 
 def main(argv: list[str]) -> int:
+    label = "default"
+    if "--label" in argv:
+        i = argv.index("--label"); label = argv[i + 1]; del argv[i:i + 2]
+    if "--home" in argv:
+        i = argv.index("--home"); global SRC
+        SRC = Path(argv[i + 1]) / "sessions"; del argv[i:i + 2]
+
     ap = argparse.ArgumentParser(prog="sessions.py")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("list")
@@ -186,7 +200,7 @@ def main(argv: list[str]) -> int:
     a = ap.parse_args(argv)
 
     if a.cmd == "list":
-        rows = list_backups()
+        rows = list_backups(label)
         if not rows:
             print("（还没有会话备份）")
             return 0
@@ -195,10 +209,10 @@ def main(argv: list[str]) -> int:
                   f"总计 {m['bytes_total']/1048576:6.1f} MB  新增 {m['bytes_new']/1048576:5.2f} MB")
         return 0
     if a.cmd == "snapshot":
-        snapshot(quiet=a.quiet)
+        snapshot(quiet=a.quiet, label=label)
         return 0
     if a.cmd == "restore":
-        return restore(a.id, apply=a.apply)
+        return restore(a.id, apply=a.apply, label=label)
     return 2
 
 
