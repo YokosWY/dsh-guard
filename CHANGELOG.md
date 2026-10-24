@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 0.3.2 — 2026-10-24
+
+挖 `host.stderr` 挖出来的一层：插件激活失败。
+
+- 新增 `plugin-inactive` 信号：解析 `N entry did not activate` 与紧随的
+  `<插件名> (<包名>): <Error>: <消息>`，记录插件名、包名、错误
+- 命中 `without inject` 时直接给可执行提示（Cordis 服务代理要 `exports.inject`）
+- 本机实测：NEXT 57 次启动里 `dsh-at-file` 一直没激活（`ctx.settings.register is not a function`）；
+  官方版 `agnes-image` 报 `cannot get property "tools" without inject`；
+  另有 1 次 `file-upload: Agent resolver is already registered`（对应上游 FAQ 1031）
+- `--json` 增加 `inactive_plugins`；摘要多一行「插件未激活」
+- 测试 55 → 57 项
+
 ## 0.3.1 — 2026-10-24
 
 补一层「不是崩溃但会话半残」的观察，以前完全看不见。

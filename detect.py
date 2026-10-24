@@ -104,6 +104,7 @@ class Run:
     degradation: list[str] = field(default_factory=list)   # renderer / network / oom
     signals: list[str] = field(default_factory=list)      # 环境类异常（不是崩溃，但影响可用性）
     tool_failures: dict = field(default_factory=dict)     # failureCode -> 次数
+    inactive_plugins: list[dict] = field(default_factory=list)  # 没激活成功的插件
     crash_loop: bool = False        # 10 分钟内连续 3 次以上事故
 
     @property
@@ -224,6 +225,10 @@ _LOG_SIGNATURES = [
 _DEGRADING = {"heap-oom", "module-missing", "dll-init-failed", "file-locked",
               "port-in-use", "disk-full"}
 
+# 插件激活失败：Cordis 会先打「N entry did not activate」，上一行通常是 <名> (<包>): <Error>: <消息>
+_PLUGIN_ERR = re.compile(
+    r"^\s*(?P<name>[\w@./-]+)\s+\((?P<pkg>[^)]+)\):\s+(?P<err>[A-Za-z]*Error|[A-Za-z]*Exception):\s+(?P<msg>.+)$")
+
 _TOOL_CODE_NOTES = {
     "UNKNOWN_TOOL": "工具在会话中途消失（多为运行中改了 profile 或插件被卸载）",
     "FS_SANDBOX_DENIED": "被文件沙箱拒绝（工具想写但没权限）",
@@ -264,12 +269,36 @@ def _scan_signals(r: Run) -> None:
             seen.discard("port-in-use")
             seen.add("port-conflict-retried")
 
-    r.signals = sorted(seen)
-    r.degraded = r.degraded or bool(seen & _DEGRADING)
+    # 插件没激活：从 stderr 的多行堆栈里认 <名> (<包>): <Error>: <消息>
+    if any("did not activate" in m for m in msgs):
+        for m in msgs:
+            for ln in m.splitlines():
+                hit = _PLUGIN_ERR.match(ln)
+                if not hit:
+                    continue
+                rec = {"name": hit.group("name"), "package": hit.group("pkg"),
+                       "error": f"{hit.group('err')}: {hit.group('msg')[:120]}"}
+                if rec not in r.inactive_plugins:
+                    r.inactive_plugins.append(rec)
+        if "plugin-inactive" not in seen:
+            seen.add("plugin-inactive")
 
+    r.signals = sorted(seen)
+    r.degraded = r.degraded or bool(seen & _DEGRADING) or bool(r.inactive_plugins)
+
+    extra_notes = {"plugin-inactive": "有插件没激活成功（相关功能缺失，进程本身没死）",
+                   "port-conflict-retried": "端口短暂冲突，本轮后来监听成功"}
     for name in r.signals:
-        note = next((n for k, _rx, n in _LOG_SIGNATURES if k == name), "")
-        r.annotations.append(f"环境异常 {name}：{note}")
+        note = next((n for k, _rx, n in _LOG_SIGNATURES if k == name), "") or extra_notes.get(name, "")
+        r.annotations.append(f"环境异常 {name}：{note}" if note else f"环境异常 {name}")
+
+    if r.inactive_plugins:
+        names = "、".join(f"{p['name']}（{p['error']}）" for p in r.inactive_plugins[:3])
+        r.annotations.append(f"插件没激活：{names}")
+        if any("without inject" in p["error"] for p in r.inactive_plugins):
+            r.annotations.append(
+                "插件没声明 inject：Cordis 的 ctx 是服务代理，客户端/宿主模块都要 "
+                "exports.inject = [...], 否则取不到 ctx.tools / ctx.slots")
 
     for code, note in _TOOL_CODE_NOTES.items():
         n = r.tool_failures.get(code, 0)
@@ -475,6 +504,8 @@ def summarize(runs: dict[str, Run]) -> dict:
         "crash_loops": sum(1 for r in runs.values() if r.crash_loop),
         "signals": dict(Counter(
             name for r in runs.values() for name in r.signals)),
+        "inactive_plugins": sorted({p["name"] for r in runs.values()
+                                    for p in r.inactive_plugins}),
         "tool_failures": dict(Counter(
             code for r in runs.values() for code, n in r.tool_failures.items() for _ in range(n))),
     }
@@ -506,6 +537,7 @@ def main(argv: list[str]) -> int:
                 "degradation": r.degradation,
                 "signals": r.signals,
                 "tool_failures": r.tool_failures,
+                "inactive_plugins": r.inactive_plugins,
             } for rid, r in sorted(
                 runs.items(),
                 key=lambda kv: kv[1].start or datetime.min.replace(tzinfo=timezone.utc))}
@@ -554,6 +586,8 @@ def main(argv: list[str]) -> int:
         print(f"{label}崩因分布: {s['categories']}")
         if s["degraded"] or s["crash_loops"]:
             print(f"{label}另有: 能力受损 {s['degraded']} 次，连环崩 {s['crash_loops']} 处")
+        if s.get("inactive_plugins"):
+            print(f"{label}插件未激活: {', '.join(s['inactive_plugins'])}")
         if s.get("signals"):
             top = ", ".join(f"{k}={v}" for k, v in
                             sorted(s["signals"].items(), key=lambda x: -x[1])[:4])

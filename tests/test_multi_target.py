@@ -186,6 +186,32 @@ class TargetsTest(unittest.TestCase):
         self.assertTrue(any("UNKNOWN_TOOL" in a for a in r.annotations))
         self.assertTrue(r.degraded)
 
+    def test_inactive_plugin_parsed(self):
+        r = self._run_with([
+            {"event": "run.start", "source": "electron"},
+            {"event": "output", "source": "host.stderr", "level": "warn",
+             "message": "dsh: warning: 1 entry did not activate"},
+            {"event": "output", "source": "host.stderr", "level": "error",
+             "message": "dsh-at-file (dsh-at-file): TypeError: ctx.settings.register is not a function"},
+            {"event": "run.end", "source": "electron"},
+        ])
+        self.assertIn("plugin-inactive", r.signals)
+        self.assertTrue(r.degraded)
+        self.assertEqual(len(r.inactive_plugins), 1)
+        self.assertEqual(r.inactive_plugins[0]["name"], "dsh-at-file")
+        self.assertIn("is not a function", r.inactive_plugins[0]["error"])
+
+    def test_inject_hint_added(self):
+        r = self._run_with([
+            {"event": "run.start", "source": "electron"},
+            {"event": "output", "source": "host.stderr", "level": "warn",
+             "message": "dsh: warning: 1 entry did not activate"},
+            {"event": "output", "source": "host.stderr", "level": "error",
+             "message": 'agnes-image (@local/dsh-agnes-image): Error: cannot get property "tools" without inject'},
+            {"event": "run.end", "source": "electron"},
+        ])
+        self.assertTrue(any("没声明 inject" in a for a in r.annotations))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

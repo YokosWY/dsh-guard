@@ -64,6 +64,30 @@
 `UNKNOWN_TOOL` 对应上游已知问题：运行中编辑 `cordis.patch.yml` 会把实时会话的大部分工具移除
 （[FAQ 932](https://dsh-ai.com/faq/932/)）。本机 32 次命中。
 
+
+### 插件没激活（`plugin-inactive`）
+
+Cordis 激活失败的插件不会让进程崩，但相关功能整段消失。判据是 stderr 里的
+`N entry did not activate` 加上紧随的错误行 `<插件名> (<包名>): <Error>: <消息>`。
+
+本机 89 次启动里命中 57 次，全部是同一个插件：
+
+| 插件 | 错误 | 影响 |
+|---|---|---|
+| `dsh-at-file` | `TypeError: ctx.settings.register is not a function` | `@` 引用文件的功能不可用 |
+
+官方版那边命中一次，是另一种典型：
+
+| 插件 | 错误 | 说明 |
+|---|---|---|
+| `agnes-image` | `Error: cannot get property "tools" without inject` | 插件没导出 `inject`，Cordis 服务代理取不到 `ctx.tools` |
+
+后一种错误本项目也踩过：客户端模块必须 `exports.inject = ["slots"]`，宿主模块要写 `export const inject = [...]`。
+检测器现在会直接给出这条提示。
+
+还有一类是「重复注册」：`file-upload: Agent resolver is already registered`，对应上游
+[FAQ 1031](https://dsh-ai.com/faq/1031/)（运行中写 `cordis.patch.yml` 触发重载，`session-controller` 重建时重复注册）。
+
 ## 上报给上游时怎么用
 
 `child-process-gone` 的 reason 取值来自 Electron 文档：`crashed`、`oom`、`launch-failed`、`integrity-failure`（Windows 代码完整性检查失败）、`killed`（[app 事件](https://www.electronjs.org/docs/latest/api/app)、[RenderProcessGoneDetails](https://electronjs.org/docs/latest/api/structures/render-process-gone-details)）。
