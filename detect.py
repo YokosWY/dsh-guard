@@ -101,6 +101,7 @@ class Run:
     gone: list[dict] = field(default_factory=list)
     annotations: list[str] = field(default_factory=list)
     degraded: bool = False          # 应用活着但能力受损（渲染进程/网络服务崩过）
+    degradation: list[str] = field(default_factory=list)   # renderer / network / oom
     crash_loop: bool = False        # 10 分钟内连续 3 次以上事故
 
     @property
@@ -206,29 +207,31 @@ def _fill_flags(r: Run) -> None:
 
 
 def _grade_gone(r: Run) -> None:
-    """把子进程死亡归类，并标记「应用还活着但能力受损」。"""
+    """子进程死亡 → 标记「应用还活着但能力受损」。
+
+    注意：这里**不改 category**。category 只表示一次失败的原因，
+    而渲染进程崩溃的 run 可能干净退出；混在一起会让统计失真。
+    """
     types = {(g.get("type") or "").lower() for g in r.gone}
     reasons = {(g.get("reason") or "").lower() for g in r.gone}
     services = " ".join(str(g.get("service") or "") for g in r.gone).lower()
 
     if "renderer" in types or "gpu" in types:
         r.degraded = True
+        r.degradation.append("renderer")
         r.annotations.append(
-            "渲染进程/GPU 进程崩溃过（type=" + ",".join(sorted(types)) +
-            " reason=" + ",".join(sorted(reasons)) + "），界面可能白屏过")
-        if not r.category:
-            r.category = "renderer-gone"
-        r.repair = CATEGORY_REPAIR.get(r.category, r.repair)
-    elif "oom" in reasons:
+            "渲染进程/GPU 进程崩过（type=" + ",".join(sorted(types)) +
+            " reason=" + ",".join(sorted(reasons)) + "），界面可能白过；建议重启应用")
+    if "oom" in reasons:
         r.degraded = True
+        if "oom" not in r.degradation:
+            r.degradation.append("oom")
         r.annotations.append("子进程 OOM（内存不足），可能被系统杀掉")
-        if not r.category:
-            r.category = "oom"
-    elif "networkservice" in services or "network" in services:
+    if "networkservice" in services or "network.mojom" in services:
         r.degraded = True
-        r.annotations.append("网络服务子进程崩过（网络请求会短暂失败）")
-        if not r.category:
-            r.category = "network-gone"
+        if "network" not in r.degradation:
+            r.degradation.append("network")
+        r.annotations.append("网络服务子进程崩过，网络请求会短暂失败")
 
 
 def _shutdown_sequence_covers(winevents: list[dict], t: datetime) -> dict | None:
@@ -422,6 +425,7 @@ def main(argv: list[str]) -> int:
                 "degraded": r.degraded,
                 "crash_loop": r.crash_loop,
                 "gone": r.gone,
+                "degradation": r.degradation,
             } for rid, r in sorted(
                 runs.items(),
                 key=lambda kv: kv[1].start or datetime.min.replace(tzinfo=timezone.utc))}

@@ -70,7 +70,8 @@
 等于：`test_lkg` / `test_preflight` / `test_guard` / `test_sessions` / `test_rescue_e2e` + `replay.py` + `preflight.py`。
 
 - 单测不读真机状态：会被机器现状影响的门槛（如基线健康门槛）用 monkeypatch 替掉
-- `replay.py` 的期望标签由 `build_expected.py` 独立生成；两边同源，一致只证明实现没跑偏，不证明规则对
+- `replay.py` 的期望标签由 `build_expected.py` 独立生成（判定逻辑独立，只有 `unclean-unknown` 的
+  `category=silent` 是共享的词表约定）；一致只证明实现没跑偏，不证明规则对
 - 安全模式与会话还原各有一份演练脚本：`tools/verify_safe_mode.py`、`tools/drill_sessions.py`
 
 ## 9. 提交前检查

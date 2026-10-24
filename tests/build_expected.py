@@ -100,7 +100,8 @@ def label(run: D.Run, win: list[dict], now: datetime) -> dict:
     if ev:
         return {**base, "family": "clean", "kind": "shutdown", "category": None,
                 "note": f"无 run.end，下次启动前机器关机（事件 {ev['id']}）"}
-    return {**base, "family": "unknown", "kind": "unclean-unknown", "category": None,
+    # 判定器把这一类记作 category=silent（「没有证据的死法」），期望标签按同一约定
+    return {**base, "family": "unknown", "kind": "unclean-unknown", "category": "silent",
             "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"}
 
 

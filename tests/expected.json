@@ -36,7 +36,7 @@
   "duration_s": 974.0,
   "family": "unknown",
   "kind": "unclean-unknown",
-  "category": null,
+  "category": "silent",
   "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
  },
  "e6254b26-968f-4570-996e-e4d9c3ad8bd6": {
@@ -44,7 +44,7 @@
   "duration_s": 38.6,
   "family": "unknown",
   "kind": "unclean-unknown",
-  "category": null,
+  "category": "silent",
   "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
  },
  "2df21672-1512-4108-aaec-cb7936c29c37": {
@@ -60,7 +60,7 @@
   "duration_s": 161.4,
   "family": "unknown",
   "kind": "unclean-unknown",
-  "category": null,
+  "category": "silent",
   "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
  },
  "86b65833-5f44-4079-b8ec-00cac1b6b109": {
@@ -68,7 +68,7 @@
   "duration_s": 2707.6,
   "family": "unknown",
   "kind": "unclean-unknown",
-  "category": null,
+  "category": "silent",
   "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
  },
  "f26d91f2-601b-4456-9716-ce3b962054f4": {
@@ -76,7 +76,7 @@
   "duration_s": 1173.1,
   "family": "unknown",
   "kind": "unclean-unknown",
-  "category": null,
+  "category": "silent",
   "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
  },
  "4163963a-caae-410e-9cd8-8904f7ae2599": {
@@ -196,7 +196,7 @@
   "duration_s": 15604.5,
   "family": "unknown",
   "kind": "unclean-unknown",
-  "category": null,
+  "category": "silent",
   "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
  },
  "ae10cd1b-74fb-4fd0-a525-f372f8167b99": {
@@ -460,7 +460,7 @@
   "duration_s": 43.2,
   "family": "unknown",
   "kind": "unclean-unknown",
-  "category": null,
+  "category": "silent",
   "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
  },
  "a685c39c-fdcd-46da-ae90-c4d6fe130c3d": {
@@ -476,7 +476,7 @@
   "duration_s": 1145.0,
   "family": "unknown",
   "kind": "unclean-unknown",
-  "category": null,
+  "category": "silent",
   "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
  },
  "d34a26e8-8416-484a-b5e2-bf8338466a09": {
@@ -617,7 +617,87 @@
  },
  "fcf6c0eb-5bd4-434a-ab90-e0663956c6f3": {
   "start": "2026-10-23T22:54:24.429000+00:00",
-  "duration_s": 18916.3,
+  "duration_s": 20570.1,
+  "family": "clean",
+  "kind": "ok",
+  "category": null,
+  "note": "run.end"
+ },
+ "ff7102b0-6f9f-4978-99cf-0857ff077720": {
+  "start": "2026-10-24T04:38:49.564000+00:00",
+  "duration_s": 1567.4,
+  "family": "clean",
+  "kind": "quit-forced",
+  "category": null,
+  "note": "用户关窗、host 超时被强杀"
+ },
+ "58d2fae2-0c6e-468e-a18a-c46748248b6b": {
+  "start": "2026-10-24T05:05:32.646000+00:00",
+  "duration_s": 2644.4,
+  "family": "clean",
+  "kind": "quit-forced",
+  "category": null,
+  "note": "用户关窗、host 超时被强杀"
+ },
+ "ed8aefc8-915b-422d-af52-1b4df643d2bf": {
+  "start": "2026-10-24T05:50:34.251000+00:00",
+  "duration_s": 985.4,
+  "family": "clean",
+  "kind": "quit-forced",
+  "category": null,
+  "note": "用户关窗、host 超时被强杀"
+ },
+ "56a2dbc1-6b32-4909-8fb9-c77475bca426": {
+  "start": "2026-10-24T06:07:03.662000+00:00",
+  "duration_s": 149.4,
+  "family": "clean",
+  "kind": "quit-forced",
+  "category": null,
+  "note": "用户关窗、host 超时被强杀"
+ },
+ "d315d5de-562b-462e-b38c-c272ad91f2c0": {
+  "start": "2026-10-24T06:09:53.678000+00:00",
+  "duration_s": 1.8,
+  "family": "unknown",
+  "kind": "unclean-unknown",
+  "category": "silent",
+  "note": "无 run.end、无 runtime.failed、下次启动前也无关机事件"
+ },
+ "6587104b-32f6-410a-89ad-316d03333e91": {
+  "start": "2026-10-24T06:10:01.768000+00:00",
+  "duration_s": 2702.7,
+  "family": "clean",
+  "kind": "quit-forced",
+  "category": null,
+  "note": "用户关窗、host 超时被强杀"
+ },
+ "6b170e48-4f88-4678-abd4-e8116746dcfd": {
+  "start": "2026-10-24T06:55:17.944000+00:00",
+  "duration_s": 0.4,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "2e37a98c-3ffc-4054-a9d1-efeac5625aeb": {
+  "start": "2026-10-24T06:56:07.607000+00:00",
+  "duration_s": 719.3,
+  "family": "clean",
+  "kind": "quit-forced",
+  "category": null,
+  "note": "用户关窗、host 超时被强杀"
+ },
+ "6ca61037-7d99-4fea-95d6-a172662f368f": {
+  "start": "2026-10-24T07:08:43.402000+00:00",
+  "duration_s": 0.4,
+  "family": "problem",
+  "kind": "boot-fail",
+  "category": "shell-load",
+  "note": "err_failed (-2) loading 'dsh-app://app/'"
+ },
+ "05d40329-46b3-46b0-be6a-7240dcb1bd19": {
+  "start": "2026-10-24T07:09:58.655000+00:00",
+  "duration_s": 1307.5,
   "family": "clean",
   "kind": "in-progress",
   "category": null,

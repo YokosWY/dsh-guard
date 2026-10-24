@@ -122,8 +122,9 @@ class TargetsTest(unittest.TestCase):
         runs = detect.analyse(home=home)
         r = runs["g1"]
         self.assertTrue(r.degraded)
-        self.assertEqual(r.category, "renderer-gone")
-        self.assertEqual(r.repair, "restart-app")
+        self.assertIn("renderer", r.degradation)
+        # category 只表示失败原因；降级不写 category（否则统计会失真）
+        self.assertIsNone(r.category)
         self.assertTrue(any("渲染进程" in a for a in r.annotations))
 
     def test_crash_loop_flagged(self):
