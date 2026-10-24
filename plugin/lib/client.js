@@ -238,9 +238,9 @@ window.__ModuleLoader__.load({
 
     function label(state, tag) {
       var base;
-      if (!state) base = "防崩守护 ?";
-      else if (!state.enabled) base = "防崩守护 关";
-      else base = state.running ? "防崩守护 开" : "防崩守护 待启";
+      if (!state) base = "护航 ?";
+      else if (!state.enabled) base = "护航 关";
+      else base = state.running ? "护航 开" : "护航 待启";
       return tag ? base + "·" + tag : base;
     }
 
@@ -343,7 +343,7 @@ window.__ModuleLoader__.load({
           title: titleFor(state),
           onClick: onClick,
           disabled: busy,
-          "aria-label": "防崩守护开关",
+          "aria-label": "护航开关",
           "data-state": tone(state),
         },
         createElement("span", { className: "dgu-dot", key: "dot" }),
@@ -365,7 +365,7 @@ window.__ModuleLoader__.load({
                 id: "guard-toggle-" + tag,
                 order: order,
                 label: function () {
-                  return "防崩守护";
+                  return "护航";
                 },
                 inject: function (sessionId) {
                   return { sessionId: sessionId };

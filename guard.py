@@ -3,7 +3,7 @@
 """dsh-guard · 常驻守护（P2）
 
 它只做监测和记录，**不自动改配置、不自动杀进程、不自动重启**——那是你审批才做的事。
-界面上的「防崩守护」开关（插件 dsh-guard-ui）就是改 `state/control.json` 的 enabled。
+界面上的「护航」开关（插件 dsh-guard-ui）就是改 `state/control.json` 的 enabled。
 
 读：`D:\\AI\\DSH-NEXT\\logs\\*.jsonl`（经 detect.py）、`state/control.json`
 写：`state/heartbeat.json`（每 30 秒）、`logs/incidents.jsonl`（新事故）、`logs/guard.log`

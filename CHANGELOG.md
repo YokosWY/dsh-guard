@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.3.4 — 2026-10-24
+
+- 界面按钮改名：「防崩守护」→「**护航**」（状态词仍是 开 / 关 / 待启 / ?）
+- 同步更新 `plugin/README.md` 与 `guard.py` 注释；运行副本已用 `tools/sync-plugin.ps1` 覆盖
+
 ## 0.3.3 — 2026-10-24
 
 - 新增 `tools/patch_at_file.py`：给 `dsh-at-file` 打本地补丁，宿主没有 `settings.register()`
