@@ -1,4 +1,4 @@
-# dsh-lifeboat · 救生艇
+# dsh-guard · 救生艇
 
 给 **DSH NEXT**（DeepSeek Harness 桌面版）做的外部看守，像救生艇：崩了能上船，先活着。
 

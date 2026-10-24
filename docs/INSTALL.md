@@ -8,10 +8,10 @@
 
 ## 1. 放哪
 
-下面用 `%PROJECT%` 代表你放这个项目的目录（例如 `D:	ools\dsh-lifeboat`）。
+下面用 `%PROJECT%` 代表你放这个项目的目录（例如 `D:	ools\dsh-guard`）。
 
 ```bat
-git clone https://github.com/<you>/dsh-lifeboat.git %PROJECT%
+git clone https://github.com/<you>/dsh-guard.git %PROJECT%
 cd /d %PROJECT%
 copy config.example.json config.json
 ```
