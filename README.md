@@ -8,7 +8,8 @@ dsh-guard 是给 DSH NEXT（DeepSeek Harness 桌面版）做崩溃判定与恢�
 
 ## 特性
 
-- **判定：** 按 `runId` 聚合 UTC 分卷日志，叠加 Windows 关机事件（1074 → 6006），输出 7 类结局；对 78 次历史启动回放，漏报 0、误报 0
+- **判定：** 按 `runId` 聚合 UTC 分卷日志，叠加 Windows 关机事件（1074 → 6006），输出 7 类结局；对 88 次历史启动回放，漏报 0、误报 0
+- **降级识别：** 渲染进程 / GPU / 网络服务崩溃、子进程 OOM、10 分钟内连环崩，单独统计不混进崩溃数
 - **体检：** `preflight.py` 只读检查 BOM、JSON/YAML 语法、`link:` 目标、`node_modules` 软链、端口、基线漂移，退出码 0/1/2
 - **还原：** 写前三查（无 DSH 进程、目标 mtime 10 秒未变、持锁），同目录 temp → fsync → `os.replace`，写后重算 sha256，不符即整批回滚
 - **备份：** 配置快照 57 文件 / 0.83 MB 一份；会话记录走硬链接增量，第二份新增 0.00 MB
@@ -101,6 +102,7 @@ python detect.py --all --csv    :: 导出 88 条启动记录，Excel 能直接�
 - [安装与卸载](docs/INSTALL.md)：建基线、装插件（三件事缺一不可）、注册任务
 - [结构](docs/ARCHITECTURE.md)：数据流与五条关键口径
 - [开发约定](docs/DEVELOP.md)：改代码前必读的坑与检查清单
+- [覆盖范围](docs/COVERAGE.md)：哪些崩法能判、哪些判不了（附上游 issue 与文档出处）
 
 ## 贡献
 

@@ -205,7 +205,8 @@ def scan_once(notify_enabled: bool = True) -> dict:
                 "started": r.start.isoformat() if r.start else None,
                 "duration_s": round(r.duration, 1),
                 "repair": r.repair,
-                "detail": (r.evidence[0] if r.evidence else "")[:300],
+                "detail": ((r.evidence[0] if r.evidence else "")
+                           + ("；" + "；".join(r.annotations) if r.annotations else ""))[:300],
             }
             if r.kind == "unclean-unknown":
                 ev = capture_evidence(rid, r, name)

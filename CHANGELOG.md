@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## 0.3.0 — 2026-10-24
+
+按上游资料补齐判定面（来源见 `docs/COVERAGE.md`）。
+
+- 新增**降级识别**：`child-process-gone` 里的 `Renderer`/`GPU` → `renderer-gone`，`reason=oom` → `oom`，
+  `NetworkService` → `network-gone`。这三类 run 可能正常结束，但界面白过 / 网络断过，统计单列
+- 新增**连环崩**标记：10 分钟内 ≥3 次异常启动
+- 新增**关机完整性**检查：host 层 `shutdown.start` 无对应 `shutdown.complete`
+- 新增恢复动作失败识别（`commands/recovery-action.failed`）
+- `--json` 增加 `annotations` / `degraded` / `crash_loop` / `gone`；`--csv` 增加两列；`--list` 行尾显示备注
+- 新增 `docs/COVERAGE.md`：能判 / 判不了两类，判不了的写明原因与上游出处
+- 本机复查结果：88 次启动中，能力受损 2 次、连环崩 4 处、关机不完整 1 次（42 次 host 关机发起 vs 41 次完成）
+- 测试 50 → 52 项
+
 ## 0.2.2 — 2026-10-24
 
 可读性与巡检：

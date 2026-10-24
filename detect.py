@@ -51,6 +51,10 @@ CATEGORY_REPAIR = {
     "host-exit": "safe-mode",        # 后端进程退出：配置无关，进安全模式并出报告
     "silent": "report",              # 静默死：只报告
     "other": "report",
+    # 应用还活着但能力受损，修配置没用，只能重启对应进程
+    "renderer-gone": "restart-app",
+    "network-gone": "restart-app",
+    "oom": "free-memory",
 }
 
 _FAIL_PATTERNS = [
@@ -93,6 +97,11 @@ class Run:
     fail_delay: float | None = None
     repair: str = "none"
     evidence: list[str] = field(default_factory=list)
+    # 附加观察（不影响 kind）：子进程崩溃、恢复动作失败、关机不完整等
+    gone: list[dict] = field(default_factory=list)
+    annotations: list[str] = field(default_factory=list)
+    degraded: bool = False          # 应用活着但能力受损（渲染进程/网络服务崩过）
+    crash_loop: bool = False        # 10 分钟内连续 3 次以上事故
 
     @property
     def duration(self) -> float:
@@ -176,9 +185,50 @@ def _fill_flags(r: Run) -> None:
     for e in r.events:
         if e.get("event") == "child-process-gone":
             f = e.get("fields") or {}
+            r.gone.append({"type": f.get("type"), "reason": f.get("reason"),
+                           "service": f.get("service"), "code": f.get("exitCode")})
             r.evidence.append(
                 f"child-process-gone: {f.get('service')} reason={f.get('reason')} "
                 f"exitCode={f.get('exitCode')}")
+
+    # 恢复动作失败：应用自己尝试自愈但没成功
+    if any((e.get("event") or "") == "commands/recovery-action.failed" for e in r.events):
+        r.annotations.append("应用自己的恢复动作失败（commands/recovery-action.failed）")
+
+    # 关机不完整：host 层发起了 shutdown.start 但没等到 shutdown.complete
+    # 注意只认 source=host 的那对事件；electron 层的 shutdown.start 每次都有，配套的 complete 不一定存在
+    host_started = any((e.get("source") or "") == "host"
+                       and (e.get("event") or "") == "shutdown.start" for e in r.events)
+    host_done = any((e.get("source") or "") == "host"
+                    and (e.get("event") or "") == "shutdown.complete" for e in r.events)
+    if host_started and not host_done:
+        r.annotations.append("host 关机流程没走完（有 shutdown.start，无 shutdown.complete）")
+
+
+def _grade_gone(r: Run) -> None:
+    """把子进程死亡归类，并标记「应用还活着但能力受损」。"""
+    types = {(g.get("type") or "").lower() for g in r.gone}
+    reasons = {(g.get("reason") or "").lower() for g in r.gone}
+    services = " ".join(str(g.get("service") or "") for g in r.gone).lower()
+
+    if "renderer" in types or "gpu" in types:
+        r.degraded = True
+        r.annotations.append(
+            "渲染进程/GPU 进程崩溃过（type=" + ",".join(sorted(types)) +
+            " reason=" + ",".join(sorted(reasons)) + "），界面可能白屏过")
+        if not r.category:
+            r.category = "renderer-gone"
+        r.repair = CATEGORY_REPAIR.get(r.category, r.repair)
+    elif "oom" in reasons:
+        r.degraded = True
+        r.annotations.append("子进程 OOM（内存不足），可能被系统杀掉")
+        if not r.category:
+            r.category = "oom"
+    elif "networkservice" in services or "network" in services:
+        r.degraded = True
+        r.annotations.append("网络服务子进程崩过（网络请求会短暂失败）")
+        if not r.category:
+            r.category = "network-gone"
 
 
 def _shutdown_sequence_covers(winevents: list[dict], t: datetime) -> dict | None:
@@ -306,7 +356,22 @@ def analyse(now: datetime | None = None, home: Path | None = None) -> dict[str, 
     for r in runs.values():
         r.home = str(home) if home else str(HOME)
         classify(r, winevents, now)
+        _grade_gone(r)
+    _mark_crash_loops(ordered)
     return runs
+
+
+def _mark_crash_loops(ordered: list[Run]) -> None:
+    """10 分钟内连续 ≥3 次需要处理的结局 → 标 crash_loop（反复崩，不是偶发）。"""
+    problems = [r for r in ordered
+                if r.kind in {"crash", "boot-fail", "unclean-unknown"} and r.start]
+    for i, r in enumerate(problems):
+        window = [p for p in problems[i:]
+                  if p.start and (p.start - r.start).total_seconds() <= 600]
+        if len(window) >= 3:
+            r.crash_loop = True
+            r.annotations.append(
+                f"连环崩：10 分钟内 {len(window)} 次异常启动（第一次 {r.start.strftime('%H:%M')}）")
 
 
 def analyse_all(now: datetime | None = None) -> dict[str, dict[str, Run]]:
@@ -329,6 +394,8 @@ def summarize(runs: dict[str, Run]) -> dict:
         "real_problems": sum(v for k, v in kinds.items() if k in crash_kinds),
         "recoverable_by_config": sum(
             1 for r in runs.values() if r.repair == "restore-config"),
+        "degraded": sum(1 for r in runs.values() if r.degraded),
+        "crash_loops": sum(1 for r in runs.values() if r.crash_loop),
     }
 
 
@@ -351,6 +418,10 @@ def main(argv: list[str]) -> int:
                 "fail_delay": round(r.fail_delay, 1) if r.fail_delay is not None else None,
                 "gates": {"boot": r.gate_boot, "shutdown": r.gate_shutdown, "host": r.gate_host},
                 "evidence": r.evidence,
+                "annotations": r.annotations,
+                "degraded": r.degraded,
+                "crash_loop": r.crash_loop,
+                "gone": r.gone,
             } for rid, r in sorted(
                 runs.items(),
                 key=lambda kv: kv[1].start or datetime.min.replace(tzinfo=timezone.utc))}
@@ -377,7 +448,8 @@ def main(argv: list[str]) -> int:
         import csv
         w = csv.writer(sys.stdout, lineterminator="\n")
         w.writerow(["target", "run_id", "start", "duration_s", "kind",
-                    "category", "repair", "boot", "shutdown", "host"])
+                    "category", "repair", "boot", "shutdown", "host",
+                    "degraded", "crash_loop"])
         for name, runs in groups.items():
             for rid, r in sorted(
                     runs.items(),
@@ -385,7 +457,8 @@ def main(argv: list[str]) -> int:
                 w.writerow([name, rid,
                             r.start.isoformat() if r.start else "",
                             round(r.duration, 1), r.kind, r.category or "",
-                            r.repair, r.gate_boot, r.gate_shutdown, r.gate_host])
+                            r.repair, r.gate_boot, r.gate_shutdown, r.gate_host,
+                            r.degraded, r.crash_loop])
         return 0
 
     for name, runs in groups.items():
@@ -395,13 +468,16 @@ def main(argv: list[str]) -> int:
               f"可由配置恢复 {s['recoverable_by_config']}")
         print(f"{label}结局分布: {s['kinds']}")
         print(f"{label}崩因分布: {s['categories']}")
+        if s["degraded"] or s["crash_loops"]:
+            print(f"{label}另有: 能力受损 {s['degraded']} 次，连环崩 {s['crash_loops']} 处")
         if "--list" in argv:
             for rid, r in sorted(
                     runs.items(),
                     key=lambda kv: kv[1].start or datetime.min.replace(tzinfo=timezone.utc)):
                 stamp = r.start.strftime("%m-%d %H:%M") if r.start else "?"
+                note = "  ← " + "；".join(r.annotations) if r.annotations else ""
                 print(f"  {stamp} {rid[:8]} {r.kind:16s} {str(r.category or '-'):14s} "
-                      f"dur={r.duration:7.1f}s repair={r.repair}")
+                      f"dur={r.duration:7.1f}s repair={r.repair}{note}")
         if len(groups) > 1:
             print()
     return 0

@@ -106,6 +106,43 @@ class TargetsTest(unittest.TestCase):
         self.assertTrue(out[0].startswith("target,run_id,start"))
         self.assertEqual(len(out), 2)
 
+    def test_child_process_gone_marks_degraded(self):
+        home = self.tmp / "home-gone"
+        (home / "logs").mkdir(parents=True)
+        base = {"time": "2026-10-24T01:00:00Z", "runId": "g1"}
+        lines = [
+            dict(base, event="run.start", pid=1, source="electron"),
+            dict(base, event="host.start.start", pid=1, source="host"),
+            dict(base, event="child-process-gone", source="electron",
+                 fields={"type": "Renderer", "reason": "oom", "exitCode": -1}),
+            dict(base, event="run.end", source="electron"),
+        ]
+        (home / "logs" / "desktop-next-2026-10-24.0.jsonl").write_text(
+            "".join(json.dumps(x) + "\n" for x in lines), encoding="utf-8")
+        runs = detect.analyse(home=home)
+        r = runs["g1"]
+        self.assertTrue(r.degraded)
+        self.assertEqual(r.category, "renderer-gone")
+        self.assertEqual(r.repair, "restart-app")
+        self.assertTrue(any("渲染进程" in a for a in r.annotations))
+
+    def test_crash_loop_flagged(self):
+        home = self.tmp / "home-loop"
+        (home / "logs").mkdir(parents=True)
+        rows = []
+        for i in range(3):
+            rid = f"c{i}"
+            for ev in ("run.start", "runtime.failed"):
+                rows.append({"time": f"2026-10-24T01:0{i}:00Z", "runId": rid,
+                             "event": ev, "source": "electron",
+                             "message": "failed: ERR_FAILED" if ev == "runtime.failed" else ""})
+        (home / "logs" / "desktop-next-2026-10-24.0.jsonl").write_text(
+            "".join(json.dumps(x) + "\n" for x in rows), encoding="utf-8")
+        runs = detect.analyse(home=home)
+        loops = [r for r in runs.values() if r.crash_loop]
+        self.assertTrue(loops)
+        self.assertTrue(any("连环崩" in a for a in loops[0].annotations))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
