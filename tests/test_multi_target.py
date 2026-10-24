@@ -144,6 +144,48 @@ class TargetsTest(unittest.TestCase):
         self.assertTrue(loops)
         self.assertTrue(any("连环崩" in a for a in loops[0].annotations))
 
+    def _run_with(self, rows):
+        tag = abs(hash(json.dumps(rows, sort_keys=True, ensure_ascii=False))) % 100000
+        home = self.tmp / f"home-sig-{tag}"
+        (home / "logs").mkdir(parents=True)
+        for i, x in enumerate(rows):
+            x.setdefault("time", f"2026-10-24T02:0{i}:00Z")
+            x.setdefault("runId", "s1")
+        (home / "logs" / "desktop-next-2026-10-24.0.jsonl").write_text(
+            "".join(json.dumps(x) + "\n" for x in rows), encoding="utf-8")
+        return detect.analyse(home=home)["s1"]
+
+    def test_port_conflict_signal(self):
+        r = self._run_with([
+            {"event": "run.start", "source": "electron"},
+            {"event": "log", "source": "host.kernel.x", "level": "error",
+             "message": "启动失败 127.0.0.1:8326：listen EADDRINUSE: address already in use"},
+            {"event": "run.end", "source": "electron"},
+        ])
+        self.assertIn("port-in-use", r.signals)
+        self.assertTrue(r.degraded)
+
+    def test_file_locked_signal(self):
+        r = self._run_with([
+            {"event": "run.start", "source": "electron"},
+            {"event": "log", "source": "host.kernel.x", "level": "error",
+             "message": "写入失败 EPERM: operation not permitted, rename 'x.json.271' -> 'x.json'"},
+            {"event": "run.end", "source": "electron"},
+        ])
+        self.assertIn("file-locked", r.signals)
+        self.assertTrue(r.degraded)
+
+    def test_unknown_tool_storm(self):
+        rows = [{"event": "run.start", "source": "electron"}]
+        for _ in range(3):
+            rows.append({"event": "execute.failed", "source": "host.tools",
+                         "fields": {"tool": "edit", "failureCode": "UNKNOWN_TOOL"}})
+        rows.append({"event": "run.end", "source": "electron"})
+        r = self._run_with(rows)
+        self.assertEqual(r.tool_failures.get("UNKNOWN_TOOL"), 3)
+        self.assertTrue(any("UNKNOWN_TOOL" in a for a in r.annotations))
+        self.assertTrue(r.degraded)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

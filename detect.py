@@ -102,6 +102,8 @@ class Run:
     annotations: list[str] = field(default_factory=list)
     degraded: bool = False          # 应用活着但能力受损（渲染进程/网络服务崩过）
     degradation: list[str] = field(default_factory=list)   # renderer / network / oom
+    signals: list[str] = field(default_factory=list)      # 环境类异常（不是崩溃，但影响可用性）
+    tool_failures: dict = field(default_factory=dict)     # failureCode -> 次数
     crash_loop: bool = False        # 10 分钟内连续 3 次以上事故
 
     @property
@@ -204,6 +206,77 @@ def _fill_flags(r: Run) -> None:
                     and (e.get("event") or "") == "shutdown.complete" for e in r.events)
     if host_started and not host_done:
         r.annotations.append("host 关机流程没走完（有 shutdown.start，无 shutdown.complete）")
+
+
+_LOG_SIGNATURES = [
+    ("heap-oom", re.compile(r"heap out of memory|Fatal process out of memory", re.I),
+     "宿主内存溢出（Node 堆），进程可能直接消失"),
+    ("module-missing", re.compile(r"ERR_MODULE_NOT_FOUND|Cannot find (module|package)", re.I),
+     "插件依赖缺失，插件起不来"),
+    ("dll-init-failed", re.compile(r"0xC0000142|STATUS_DLL_INIT_FAILED", re.I),
+     "子进程 DLL 初始化失败（沙箱或权限问题），shell 工具会全废"),
+    ("econnreset", re.compile(r"ECONNRESET", re.I), "连接被重置（网络抖动或代理断流）"),
+    ("file-locked", re.compile(r"(EPERM|EBUSY)", re.I), "写入被拦截（杀软/文件被占用），状态可能只落一半"),
+    ("port-in-use", re.compile(r"EADDRINUSE", re.I), "端口被占，内置服务起不来"),
+    ("disk-full", re.compile(r"ENOSPC|no space left", re.I), "磁盘满"),
+]
+
+_DEGRADING = {"heap-oom", "module-missing", "dll-init-failed", "file-locked",
+              "port-in-use", "disk-full"}
+
+_TOOL_CODE_NOTES = {
+    "UNKNOWN_TOOL": "工具在会话中途消失（多为运行中改了 profile 或插件被卸载）",
+    "FS_SANDBOX_DENIED": "被文件沙箱拒绝（工具想写但没权限）",
+    "WEB_PROVIDER_ERROR": "联网工具失败（网络或供应商侧）",
+}
+
+
+def _scan_signals(r: Run) -> None:
+    """扫事件里的环境类异常：日志签名 + 工具失败码。
+
+    这些不是「崩溃」，但会让会话半残（工具消失、写入失败、shell 起不来），
+    单列出来，避免统计上被当成一切正常。
+    """
+    seen: set[str] = set()
+    msgs: list[str] = []
+    for e in r.events:
+        ev = e.get("event") or ""
+        if ev == "execute.failed":
+            code = (e.get("fields") or {}).get("failureCode")
+            if code:
+                r.tool_failures[code] = r.tool_failures.get(code, 0) + 1
+            continue
+        src = e.get("source") or ""
+        if not (src.startswith("host") or src == "renderer"):
+            continue
+        msg = str(e.get("message") or "")
+        if not msg:
+            continue
+        msgs.append(msg)
+        for name, rx, _note in _LOG_SIGNATURES:
+            if name not in seen and rx.search(msg):
+                seen.add(name)
+
+    # 端口冲突常来自「上一实例还没退干净」：本轮后来听成功了就只是短暂冲突
+    if "port-in-use" in seen:
+        recovered = any(("已监听" in m) or ("listening on" in m.lower()) for m in msgs)
+        if recovered:
+            seen.discard("port-in-use")
+            seen.add("port-conflict-retried")
+
+    r.signals = sorted(seen)
+    r.degraded = r.degraded or bool(seen & _DEGRADING)
+
+    for name in r.signals:
+        note = next((n for k, _rx, n in _LOG_SIGNATURES if k == name), "")
+        r.annotations.append(f"环境异常 {name}：{note}")
+
+    for code, note in _TOOL_CODE_NOTES.items():
+        n = r.tool_failures.get(code, 0)
+        if n >= 3:
+            r.annotations.append(f"工具失败 {n} 次 {code}：{note}")
+            if code == "UNKNOWN_TOOL":
+                r.degraded = True
 
 
 def _grade_gone(r: Run) -> None:
@@ -360,6 +433,7 @@ def analyse(now: datetime | None = None, home: Path | None = None) -> dict[str, 
         r.home = str(home) if home else str(HOME)
         classify(r, winevents, now)
         _grade_gone(r)
+        _scan_signals(r)
     _mark_crash_loops(ordered)
     return runs
 
@@ -399,6 +473,10 @@ def summarize(runs: dict[str, Run]) -> dict:
             1 for r in runs.values() if r.repair == "restore-config"),
         "degraded": sum(1 for r in runs.values() if r.degraded),
         "crash_loops": sum(1 for r in runs.values() if r.crash_loop),
+        "signals": dict(Counter(
+            name for r in runs.values() for name in r.signals)),
+        "tool_failures": dict(Counter(
+            code for r in runs.values() for code, n in r.tool_failures.items() for _ in range(n))),
     }
 
 
@@ -426,6 +504,8 @@ def main(argv: list[str]) -> int:
                 "crash_loop": r.crash_loop,
                 "gone": r.gone,
                 "degradation": r.degradation,
+                "signals": r.signals,
+                "tool_failures": r.tool_failures,
             } for rid, r in sorted(
                 runs.items(),
                 key=lambda kv: kv[1].start or datetime.min.replace(tzinfo=timezone.utc))}
@@ -474,6 +554,10 @@ def main(argv: list[str]) -> int:
         print(f"{label}崩因分布: {s['categories']}")
         if s["degraded"] or s["crash_loops"]:
             print(f"{label}另有: 能力受损 {s['degraded']} 次，连环崩 {s['crash_loops']} 处")
+        if s.get("signals"):
+            top = ", ".join(f"{k}={v}" for k, v in
+                            sorted(s["signals"].items(), key=lambda x: -x[1])[:4])
+            print(f"{label}环境异常: {top}")
         if "--list" in argv:
             for rid, r in sorted(
                     runs.items(),

@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 0.3.1 — 2026-10-24
+
+补一层「不是崩溃但会话半残」的观察，以前完全看不见。
+
+- 新增日志签名扫描：`EADDRINUSE` / `ECONNRESET` / `EPERM|EBUSY` / `heap out of memory` /
+  `ERR_MODULE_NOT_FOUND` / `0xC0000142` / `ENOSPC`
+- 新增工具失败码统计（`UNKNOWN_TOOL`、`FS_SANDBOX_DENIED`、`WEB_PROVIDER_ERROR`）
+- 端口冲突区分「真失败」与「上一实例没退干净的短暂冲突」
+- 本机实测：`port-in-use` 40/89 次（`openai-gateway` 端口 8326 被占）、`econnreset` 12 次、
+  `file-locked` 2 次、`UNKNOWN_TOOL` 32 次
+- `--json` 增加 `signals` / `tool_failures`；摘要多一行「环境异常」
+- 测试 52 → 55 项
+
 ## 0.3.0 — 2026-10-24
 
 按上游资料补齐判定面（来源见 `docs/COVERAGE.md`）。

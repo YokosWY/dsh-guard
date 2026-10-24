@@ -37,6 +37,33 @@
 
 最后一条尤其要注意：DSH 会自愈式重写你的 profile。所以本项目的备份仓必须自己留一份，不能只依赖 DSH 的 `recovery/`。
 
+
+## 环境异常（不是崩溃，但会话会半残）
+
+这些不会让 run 失败，所以不会进崩溃统计；以前完全看不见。
+
+| 签名 | 判据 | 后果 |
+|---|---|---|
+| `port-in-use` | 日志出现 `EADDRINUSE` 且本轮没监听成功 | 内置网关起不来（本机 40/89 次启动命中 `openai-gateway` 端口 8326） |
+| `port-conflict-retried` | 出现 `EADDRINUSE` 但随后 `已监听` | 上一实例没退干净的短暂冲突，不算受损 |
+| `econnreset` | `ECONNRESET` | 网络请求被重置，日志里是 npm registry 重试 |
+| `file-locked` | `EPERM` / `EBUSY` | 写入被拦（杀软或文件被占用），状态可能只落一半 |
+| `heap-oom` | `heap out of memory` | 宿主堆溢出，进程可能直接消失 |
+| `module-missing` | `ERR_MODULE_NOT_FOUND` | 插件依赖缺失，插件起不来 |
+| `dll-init-failed` | `0xC0000142` / `STATUS_DLL_INIT_FAILED` | 受限沙箱子进程初始化失败，shell 全废 |
+| `disk-full` | `ENOSPC` | 磁盘满 |
+
+另外统计「工具失败码」，其中三类会提示环境坏了（≥3 次/轮才记）：
+
+| failureCode | 含义 |
+|---|---|
+| `UNKNOWN_TOOL` | 工具在会话中途消失，多为运行中改 profile 或插件被卸载 |
+| `FS_SANDBOX_DENIED` | 被文件沙箱拒绝 |
+| `WEB_PROVIDER_ERROR` | 联网工具失败（网络或供应商侧） |
+
+`UNKNOWN_TOOL` 对应上游已知问题：运行中编辑 `cordis.patch.yml` 会把实时会话的大部分工具移除
+（[FAQ 932](https://dsh-ai.com/faq/932/)）。本机 32 次命中。
+
 ## 上报给上游时怎么用
 
 `child-process-gone` 的 reason 取值来自 Electron 文档：`crashed`、`oom`、`launch-failed`、`integrity-failure`（Windows 代码完整性检查失败）、`killed`（[app 事件](https://www.electronjs.org/docs/latest/api/app)、[RenderProcessGoneDetails](https://electronjs.org/docs/latest/api/structures/render-process-gone-details)）。
