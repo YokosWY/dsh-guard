@@ -74,7 +74,7 @@ Cordis 激活失败的插件不会让进程崩，但相关功能整段消失。�
 
 | 插件 | 错误 | 影响 |
 |---|---|---|
-| `dsh-at-file` | `TypeError: ctx.settings.register is not a function` | `@` 引用文件的功能不可用 |
+| `dsh-at-file` | `TypeError: ctx.settings.register is not a function` | `@` 引用文件的功能不可用（**已用 `tools/patch_at_file.py` 打本地补丁：宿主无 `register()` 时降级为内存设置**） |
 
 官方版那边命中一次，是另一种典型：
 

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.3.3 — 2026-10-24
+
+- 新增 `tools/patch_at_file.py`：给 `dsh-at-file` 打本地补丁，宿主没有 `settings.register()`
+  时降级为内存设置，避免整个插件不激活（本机 57/89 次启动命中）。幂等，自动备份，`--revert` 回滚
+- `docs/COVERAGE.md` 记录该补丁与验证方法
+
 ## 0.3.2 — 2026-10-24
 
 挖 `host.stderr` 挖出来的一层：插件激活失败。
