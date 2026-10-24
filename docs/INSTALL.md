@@ -107,6 +107,7 @@ schtasks /delete /tn "DSH-Guard-Ensure" /f
 
 - `detect.py --all` 逐目标判定；`guard.py` 每轮都扫，`scan.json` 按 target 分开
 - 备份：第一个目标用默认目录，其余落 `lkg/<name>/`、`sessions-backup/<name>/`
+- 单套操作：`python preflight.py --home <path> --label <name>`、`python rescue.py --home <path> --label <name>`
 - 界面开关要对每套各装一次（三件事同上，路径换成那套的 home）
 - 官方版 0.2.1-rc.2 实测：日志事件与插槽都与 NEXT 一致，插件可直接装
 

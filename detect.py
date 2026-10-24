@@ -361,6 +361,10 @@ def main(argv: list[str]) -> int:
         groups = analyse_all()
     elif "--home" in argv:
         home = Path(argv[argv.index("--home") + 1])
+        if not (home / "logs").is_dir():
+            print(f"✗ {home} 下没有 logs 目录，不像 DSH 数据目录")
+            print("  用法：python detect.py --home <DSH数据目录>  或  python detect.py --all")
+            return 2
         groups = {home.name: analyse(home=home)}
     else:
         groups = {"default": analyse()}

@@ -40,6 +40,7 @@ BOM = b"\xef\xbb\xbf"
 PORT = 57120
 
 results: list[dict] = []
+LABEL = "default"   # 备份仓标签，跟 --home 配套
 
 
 def add(level: str, code: str, msg: str, fix: str = "") -> None:
@@ -220,11 +221,11 @@ def check_storages() -> None:
 
 
 def check_drift() -> None:
-    base = lkg.load_baseline()
+    base = lkg.load_baseline(LABEL)
     if not base:
         add("WARN", "no-baseline", "还没有基线", "python lkg.py snapshot && python lkg.py promote <id> --yes")
         return
-    snap = lkg.LKG_DIR / base["id"] / "manifest.json"
+    snap = lkg.repo_dir(LABEL) / base["id"] / "manifest.json"
     if not snap.exists():
         add("WARN", "baseline-missing", f"基线 {base['id']} 的快照文件不见了", "重新 snapshot + promote")
         return
@@ -284,11 +285,31 @@ def render(rc: int) -> str:
     return "\n".join(out)
 
 
+USAGE = """用法:
+  python preflight.py                    体检默认目标（config.json 的第一个 home）
+  python preflight.py --home <path>      体检指定 DSH 数据目录
+  python preflight.py --json             机器可读输出
+  python preflight.py --no-drift         跳过基线漂移检查
+退出码: 0 通过 / 1 有警告 / 2 有阻塞问题"""
+
+
 def main(argv: list[str]) -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:
         pass
+    if "--help" in argv or "-h" in argv:
+        print(USAGE)
+        return 0
+    global HOME, PROFILE, LABEL
+    if "--label" in argv:
+        LABEL = argv[argv.index("--label") + 1]
+    if "--home" in argv:
+        HOME = Path(argv[argv.index("--home") + 1])
+        PROFILE = HOME / "profiles" / "desktop"
+        if not HOME.is_dir():
+            print(f"✗ {HOME} 不存在")
+            return 2
     rc = run(do_drift="--no-drift" not in argv)
     if "--json" in argv:
         print(json.dumps({"rc": rc, "results": results}, ensure_ascii=False, indent=1))

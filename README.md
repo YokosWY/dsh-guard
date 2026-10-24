@@ -34,6 +34,7 @@ dsh-guard 是给 DSH NEXT（DeepSeek Harness 桌面版）做崩溃判定与恢�
 | 能力 | 多实例行为 |
 |---|---|
 | 判定 | `python detect.py --all` 逐目标输出；`--home <path>` 只看一个 |
+| 体检 / 救援 | `preflight.py --home <path> --label <name>`、`rescue.py --home <path> --label <name>` |
 | 守护 | 每轮逐个目标扫描，`scan.json` 按 target 分开存，首次跑只建基线不通知 |
 | 备份 | 第一个目标落 `lkg/`、`sessions-backup/`（默认标签），其余落 `lkg/<name>/`、`sessions-backup/<name>/` |
 | 界面开关 | 每套 DSH 各装一次插件；两个桥读同一份 `state/control.json`，开关对两套同时生效 |

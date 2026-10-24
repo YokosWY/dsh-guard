@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 0.2.1 — 2026-10-24
+
+打磨轮：把命令行做完整，修掉几个会静默错的行为。
+
+- `preflight.py` 支持 `--home` / `--label` / `--help`；第二套 DSH 也能单独体检
+- `rescue.py` 支持 `--home` / `--label` / `--help`；按目标取对应基线，不再只看默认仓
+- `detect.py --home` 指向不存在的目录时直接报错（之前会静默输出 0 条）
+- `lkg.py --home` 真的生效了（之前只改模块变量，快照仍按 config.json 的 home 走）
+- `lkg.py` 空快照给出明确错误，而不是 `FileNotFoundError`
+- 进程识别覆盖两套：`DSH NEXT.exe` 与 `DeepSeek Harness.exe`，避免对着运行中的实例做还原
+- 新增 `.editorconfig`：`.cmd` 用 ASCII+CRLF，`.ps1` 用 UTF-8 BOM，JSON/YAML 两空格
+- 测试 43 → 48 项（preflight +3、lkg +2）
+
 ## 0.2.0 — 2026-10-24
 
 多实例支持：同一台机器上的 DSH NEXT 与官方版可以一起盯。

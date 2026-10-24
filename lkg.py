@@ -59,6 +59,7 @@ def baseline_file(label: str = "default") -> Path:
     return repo_dir(label) / "baseline.json"
 
 CONFIG = ROOT / "config.json"
+HOME_OVERRIDE: Path | None = None   # --home 用：覆盖 config 里的 home
 
 KEEP = 14
 MTIME_QUIET_SECONDS = 10
@@ -115,10 +116,15 @@ def load_config() -> dict:
                 cfg.pop("items", None)
             base = json.loads(json.dumps(DEFAULT_CONFIG))
             base.update(cfg)
+            if HOME_OVERRIDE:
+                base["home"] = str(HOME_OVERRIDE)
             return base
         except Exception as e:
             print(f"⚠ config.json 解析失败，用默认配置：{e}")
-    return json.loads(json.dumps(DEFAULT_CONFIG))
+    base = json.loads(json.dumps(DEFAULT_CONFIG))
+    if HOME_OVERRIDE:
+        base["home"] = str(HOME_OVERRIDE)
+    return base
 
 
 @dataclass
@@ -204,6 +210,11 @@ def snapshot(reason: str = "manual", cfg: dict | None = None, quiet: bool = Fals
                 "sha256": sha256_file(fp),
                 "size": fp.stat().st_size,
             })
+
+    if not files:
+        raise SystemExit(
+            "✗ 没有匹配到任何备份文件。检查 config.json 的 items 与 home 是否对得上"
+            + "\n" + f"  home = {home}")
 
     if skip_identical:
         # 每日定时任务用这个：内容没变就不落新快照，否则 14 份全被同样的内容顶掉，
@@ -380,7 +391,9 @@ def _dsh_processes() -> list[str]:
     for p in psutil.process_iter(["pid", "name"]):
         try:
             name = (p.info.get("name") or "")
-            if "dsh next" in name.lower() or name.lower() in ("dsh next.exe",):
+            low = name.lower()
+            # 两套都要认：NEXT 是 "DSH NEXT.exe"，官方版是 "DeepSeek Harness.exe"
+            if low in ("dsh next.exe", "deepseek harness.exe") or "dsh next" in low:
                 out.append(f"{p.info['pid']}:{name}")
         except Exception:
             continue
@@ -517,8 +530,9 @@ def main(argv: list[str]) -> int:
         i = argv.index("--home")
         home_override = argv[i + 1]
         del argv[i:i + 2]
-        global HOME
+        global HOME, HOME_OVERRIDE
         HOME = Path(home_override)
+        HOME_OVERRIDE = HOME
 
     ap = argparse.ArgumentParser(prog="lkg.py")
     sub = ap.add_subparsers(dest="cmd", required=True)

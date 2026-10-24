@@ -166,5 +166,32 @@ class LkgTest(unittest.TestCase):
         self.assertEqual(hit[0].mode, "restore")
 
 
+    def test_home_override_applies_to_config(self):
+        """--home 要能覆盖 config.json 的 home，否则备份的还是默认目标。"""
+        other = self.tmp / "other-home"
+        (other / "profiles" / "desktop").mkdir(parents=True)
+        (other / "profiles" / "desktop" / "package.json").write_text("{}", encoding="utf-8")
+        orig = lkg.HOME_OVERRIDE
+        try:
+            lkg.HOME_OVERRIDE = other
+            cfg = lkg.load_config()
+            self.assertEqual(cfg["home"], str(other))
+            m = lkg.snapshot("t", quiet=True)
+            paths = [f["path"] for f in m["files"]]
+            self.assertIn("profiles/desktop/package.json", paths)
+        finally:
+            lkg.HOME_OVERRIDE = orig
+
+    def test_empty_snapshot_errors_clearly(self):
+        """home 里没有匹配文件时要给明确错误，而不是 FileNotFoundError。"""
+        empty = self.tmp / "empty-home"
+        empty.mkdir()
+        cfg = dict(self.cfg)
+        cfg["home"] = str(empty)
+        with self.assertRaises(SystemExit) as ctx:
+            lkg.snapshot("t", cfg=cfg, quiet=True)
+        self.assertIn("没有匹配到任何备份文件", str(ctx.exception))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

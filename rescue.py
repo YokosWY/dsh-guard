@@ -36,6 +36,15 @@ import preflight  # noqa: E402
 
 APP_EXE = lkg.HOME / "app" / "DSH NEXT.exe"
 APP_CWD = lkg.HOME / "app"
+LABEL = "default"      # 备份仓标签：默认目标用 default，第二套用它的 name
+
+USAGE = """用法:
+  python rescue.py                 体检 + 给建议（什么都不改）
+  python rescue.py --apply         从基线还原（需 DSH 完全退出）
+  python rescue.py --safe-mode     用安全模式启动
+  python rescue.py --launch        正常启动
+  python rescue.py --home <path> --label official   对第二套 DSH 操作
+退出码: 0 正常/已修好 / 2 有阻塞问题未解决 / 3 DSH 没退出 / 4 还原失败已回滚"""
 
 CONFIG_CODES = {"bom", "json-parse", "yaml-parse", "yaml-shape", "missing", "bundle-missing"}
 
@@ -80,6 +89,27 @@ def main(argv: list[str]) -> int:
     except Exception:
         pass
 
+    global APP_EXE, APP_CWD, LABEL
+    if "--help" in argv or "-h" in argv:
+        print(USAGE)
+        return 0
+    if "--home" in argv:
+        home = Path(argv[argv.index("--home") + 1])
+        if not home.is_dir():
+            print(f"✗ {home} 不存在")
+            return 2
+        lkg.HOME = home
+        preflight.HOME = home
+        preflight.PROFILE = home / "profiles" / "desktop"
+        preflight.LABEL = LABEL
+        APP_EXE = home / "app" / ("DSH NEXT.exe" if "DSH-NEXT" in str(home) else "DeepSeek Harness.exe")
+        APP_CWD = home / "app"
+    if "--label" in argv:
+        LABEL = argv[argv.index("--label") + 1]
+        preflight.LABEL = LABEL
+    if "--home" in argv or "--label" in argv:
+        print(f"(目标: {lkg.HOME}  label={LABEL})")
+
     print("=" * 62)
     print("dsh-guard 救援  ·", lkg.utcnow().astimezone().strftime("%Y-%m-%d %H:%M"))
     print("=" * 62)
@@ -98,7 +128,7 @@ def main(argv: list[str]) -> int:
     fails = [r for r in results if r["level"] == "FAIL"]
     config_fails = [r for r in fails if r["code"] in CONFIG_CODES]
     procs = lkg._dsh_processes()
-    baseline = lkg.load_baseline()
+    baseline = lkg.load_baseline(LABEL)
 
     print()
     if not fails:
@@ -124,7 +154,7 @@ def main(argv: list[str]) -> int:
             return 3
         if "--apply" not in argv:
             print("\n先看会改什么（演练，不写）：")
-            lkg.restore(baseline["id"], apply=False)
+            lkg.restore(baseline["id"], apply=False, label=LABEL)
             print("\n确认无误后：python rescue.py --apply")
             return 2
         if not ask(f"确认用基线 {baseline['id']} 覆盖当前配置？",
@@ -133,11 +163,11 @@ def main(argv: list[str]) -> int:
             return 2
         # 先把「坏掉的现在」留一份，万一基线也不对还能回看
         try:
-            lkg.snapshot("pre-restore", quiet=True)
+            lkg.snapshot("pre-restore", quiet=True, label=LABEL)
             print("  已把当前（将要被替换的）配置存为 pre-restore 快照")
         except Exception as e:
             print(f"  ⚠ pre-restore 快照失败：{e}（继续）")
-        code = lkg.restore(baseline["id"], apply=True)
+        code = lkg.restore(baseline["id"], apply=True, label=LABEL)
         if code != 0:
             print("✗ 还原失败（已自动回滚），按上面提示手工处理。")
             return 4

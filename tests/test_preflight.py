@@ -151,5 +151,44 @@ class PreflightTest(unittest.TestCase):
         self.assertIn("bundles", self.codes())
 
 
+    def test_drift_uses_label_repo(self):
+        """--label 指向第二个目标的备份仓，不能错用默认仓。"""
+        import json as _json
+        import lkg as L
+        src = {"dependencies": {},
+               "dsh": {"profile": {"bundles": ["@deepseek-ai/dsh-base"]}}}
+        self.write_pkg(src)
+        home = self.prof.parent.parent
+        orig = (L.LKG_DIR, L.BASELINE, P.LABEL)
+        L.LKG_DIR = self.tmp / "lkg"
+        L.BASELINE = L.LKG_DIR / "baseline.json"
+        P.LABEL = "official"
+        try:
+            cfg = {"home": str(home), "items": [
+                {"bucket": "profiles", "path": "profiles/desktop/package.json",
+                 "mode": "restore"}]}
+            m = L.snapshot("t", cfg=cfg, quiet=True, label="official")
+            L.baseline_file("official").write_text(
+                _json.dumps({"id": m["id"], "created": m["created"],
+                             "file_count": m["file_count"]}), encoding="utf-8")
+            P.results.clear()
+            P.check_drift()
+            codes = [r["code"] for r in P.results]
+            self.assertIn("drift", codes)
+            self.assertNotIn("baseline-missing", codes)
+        finally:
+            L.LKG_DIR, L.BASELINE, P.LABEL = orig
+
+    def test_home_flag_switches_profile(self):
+        other = self.tmp / "other"
+        (other / "profiles" / "desktop").mkdir(parents=True)
+        rc = P.main(["--home", str(other), "--no-drift"])
+        self.assertIn(rc, (0, 1, 2))
+        self.assertEqual(P.PROFILE, other / "profiles" / "desktop")
+
+    def test_help(self):
+        self.assertEqual(P.main(["--help"]), 0)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
