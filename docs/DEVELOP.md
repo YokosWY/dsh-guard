@@ -93,3 +93,15 @@
 | `docs/` | 安装、结构、开发约定 |
 | `plugin/` | 界面插件；安装时复制到 DSH 的 `local-plugins` |
 | `state/` `logs/` `lkg/` `sessions-backup/` `quarantine/` | 运行时产物，全部 gitignore |
+
+## 11. 两套 DSH 的配置差异（迁移时注意）
+
+同一个 profile 配置在两套之间复制时，注意 `@deepseek-ai/dsh-tool-subagent` 的字段：
+
+| 版本 | 支持 `toolFilter` / `persona` | 现象 |
+|---|---|---|
+| NEXT 的 `0.2.1-alpha.2` | 支持 | 正常加载 |
+| 官方版的 `0.2.1-rc.2` | **拒绝**，报 `tool-subagent: <field> is no longer supported` | 新建会话直接失败 |
+
+迁移配置到官方版之前，把 preset 里 `toolFilter` / `persona` 整块删掉，否则会卡在「新建会话失败」。
+查法：`grep -n "toolFilter\|persona:" profiles/desktop/cordis.patch.yml`。

@@ -139,7 +139,13 @@ def check_autostart():
             print(f"? 计划任务 {name} 查询失败：{e}")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    argv = argv or []
+    global HOME, PROFILE
+    if "--home" in argv:
+        HOME = Path(argv[argv.index("--home") + 1])
+        PROFILE = HOME / "profiles" / "desktop"
+        print(f"(目标 home: {HOME})")
     print("dsh-guard-ui 诊断")
     head("1. 宿主桥")
     port = check_port()
@@ -162,4 +168,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))
