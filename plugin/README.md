@@ -1,7 +1,7 @@
 # dsh-guard-ui
 
 DSH NEXT 的界面开关插件：在会话头部「费用明细」左边放一个「防崩守护」按钮，
-控制 `dsh-guard` 的后台守护进程。
+控制 `dsh-lifeboat` 的后台守护进程（插件包名沿用 `@local/dsh-guard-ui`，因为已装进运行中的 profile，改名会连带重配）。
 
 ## 它做什么
 
@@ -57,7 +57,7 @@ node scripts/selftest.mjs
 :: 桥在听吗
 netstat -ano | findstr 43891
 :: 客户端跑了吗（有 apply / inject-fired 就说明在跑）
-type "%DSH_HOME%\..\..\AI\Projects\dsh-guard\state\client-diag.jsonl"
+type "%DSH_HOME%\..\..\AI\Projects\dsh-lifeboat\state\client-diag.jsonl"
 ```
 
 更系统的排查用主项目的 `diag.cmd`。

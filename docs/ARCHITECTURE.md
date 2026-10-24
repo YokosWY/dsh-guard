@@ -1,7 +1,7 @@
 # 结构
 
 ```
-dsh-guard/
+dsh-lifeboat/          ← 仓库名；本地目录叫什么无所谓
   paths.py            本机路径解析（DSH home / python / pythonw），所有写死路径都收在这里
   detect.py           判定器：读 DSH 日志 + Windows 事件，把每次启动分类
   preflight.py        只读体检：BOM / JSON / YAML / link 目标 / 软链 / 端口 / 漂移

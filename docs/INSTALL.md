@@ -8,9 +8,11 @@
 
 ## 1. 放哪
 
+下面用 `%PROJECT%` 代表你放这个项目的目录（例如 `D:	ools\dsh-lifeboat`）。
+
 ```bat
-git clone <repo> D:\AI\Projects\dsh-guard
-cd /d D:\AI\Projects\dsh-guard
+git clone https://github.com/<you>/dsh-lifeboat.git %PROJECT%
+cd /d %PROJECT%
 copy config.example.json config.json
 ```
 
@@ -51,7 +53,7 @@ python lkg.py promote <上面输出的id> --yes
 
 ```bat
 :: ① 复制/软链到 DSH 的 local-plugins
-mklink /J "%DSH_HOME%\local-plugins\dsh-guard-ui" "D:\AI\Projects\dsh-guard\plugin"
+mklink /J "%DSH_HOME%\local-plugins\dsh-guard-ui" "%PROJECT%\plugin"
 
 :: ② 在 profile 的 package.json 里加依赖
 ::    "@local/dsh-guard-ui": "link:<DSH_HOME>/local-plugins/dsh-guard-ui"
@@ -77,11 +79,11 @@ python diag.cmd              :: 第 1、2、3 段全绿
 ```bat
 :: 登录自启
 reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v DSH-Guard /t REG_SZ ^
- /d "\"<pythonw路径>\" \"D:\AI\Projects\dsh-guard\guard.py\"" /f
+ /d "\"<pythonw路径>\" \"%PROJECT%\guard.py\"" /f
 
 :: 两个计划任务（当前用户，不需要管理员）
-schtasks /create /tn "DSH-Guard-Daily-Snapshot" /tr "\"D:\AI\Projects\dsh-guard\tools\daily-snapshot.cmd\"" /sc daily /st 12:40 /f
-schtasks /create /tn "DSH-Guard-Ensure" /tr "\"D:\AI\Projects\dsh-guard\tools\guard-ensure.cmd\"" /sc minute /mo 5 /f
+schtasks /create /tn "DSH-Guard-Daily-Snapshot" /tr "\"%PROJECT%\tools\daily-snapshot.cmd\"" /sc daily /st 12:40 /f
+schtasks /create /tn "DSH-Guard-Ensure" /tr "\"%PROJECT%\tools\guard-ensure.cmd\"" /sc minute /mo 5 /f
 ```
 
 撤销：

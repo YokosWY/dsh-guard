@@ -1,6 +1,6 @@
-# dsh-guard
+# dsh-lifeboat · 救生艇
 
-给 **DSH NEXT**（DeepSeek Harness 桌面版）做外部看守。
+给 **DSH NEXT**（DeepSeek Harness 桌面版）做的外部看守，像救生艇：崩了能上船，先活着。
 
 DSH 崩了以后，它自己的「恢复」界面有时候是坏的（本项目实测到过恢复页 `ERR_FAILED`），
 这时你既不知道死在哪，也进不去。dsh-guard 解决三件事：
@@ -65,8 +65,7 @@ python lkg.py promote <id> --yes
 
 - 判定器回放：漏报 0、误报 0
 - **能靠配置备份救的只有 3 次**——其余是 DSH 本体问题（18 次壳页 `ERR_FAILED`，0.3–0.7 秒自退，profile 完全没加载）
-- 详细分析：[`reports/findings-2026-10-24.md`](reports/findings-2026-10-24.md)
-- 顺手挖到的 DSH 缺陷：[`reports/bug-quit-forced.md`](reports/bug-quit-forced.md)（10/10 复现的关窗超时）
+- 详细分析与缺陷证据留在本机 `reports/`，不入库（含运行数据）
 
 ## 已知限制
 
