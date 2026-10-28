@@ -1,7 +1,7 @@
 # dsh-guard-ui
 
 DSH NEXT 的界面开关插件：在会话头部「费用明细」左边放一个「护航」按钮，
-控制 `dsh-guard` 的后台守护进程（插件包名沿用 `@local/dsh-guard-ui`，因为已装进运行中的 profile，改名会连带重配）。
+控制 `dsh-guard` 的后台守护进程（包名 `dsh-guard-ui`，从 npm 或 `dsh plugin add` 装；本地开发仍可用 `link:` 直连本目录）。
 
 ## 它做什么
 
@@ -28,10 +28,10 @@ DSH NEXT 的界面开关插件：在会话头部「费用明细」左边放一�
 xcopy /E /I /Y plugin "%DSH_HOME%\local-plugins\dsh-guard-ui"
 
 :: 2) profile 的 package.json：加依赖 + 加进 dsh.profile.bundles
-::    "@local/dsh-guard-ui": "link:<DSH_HOME>/local-plugins/dsh-guard-ui"
+::    "dsh-guard-ui": "link:<DSH_HOME>/local-plugins/dsh-guard-ui"
 
 :: 3) 建 node_modules 软链（DSH 从这里解析 bundle，只写 link: 不够）
-mklink /J "%DSH_HOME%\profiles\desktop\node_modules\@local\dsh-guard-ui" "%DSH_HOME%\local-plugins\dsh-guard-ui"
+mklink /J "%DSH_HOME%\profiles\desktop\node_modules\dsh-guard-ui" "%DSH_HOME%\local-plugins\dsh-guard-ui"
 ```
 
 还有一条**代码级**要求：客户端模块必须导出 `inject`，否则 `ctx.slots` 取不到：

@@ -56,11 +56,11 @@ python lkg.py promote <上面输出的id> --yes
 mklink /J "%DSH_HOME%\local-plugins\dsh-guard-ui" "%PROJECT%\plugin"
 
 :: ② 在 profile 的 package.json 里加依赖
-::    "@local/dsh-guard-ui": "link:<DSH_HOME>/local-plugins/dsh-guard-ui"
-::    并把 "@local/dsh-guard-ui" 加进 dsh.profile.bundles
+::    "dsh-guard-ui": "link:<DSH_HOME>/local-plugins/dsh-guard-ui"
+::    并把 "dsh-guard-ui" 加进 dsh.profile.bundles
 
 :: ③ 建 node_modules 软链（DSH 从这里解析 bundle）
-mklink /J "%DSH_HOME%\profiles\desktop\node_modules\@local\dsh-guard-ui" "%DSH_HOME%\local-plugins\dsh-guard-ui"
+mklink /J "%DSH_HOME%\profiles\desktop\node_modules\dsh-guard-ui" "%DSH_HOME%\local-plugins\dsh-guard-ui"
 ```
 
 改完必须**完全重启 DSH**（不是刷新页面）才会加载。
@@ -131,5 +131,5 @@ python tests\replay.py
 
 1. `reg delete "HKCU\...\Run" /v DSH-Guard /f`
 2. `schtasks /delete /tn "DSH-Guard-Ensure" /f`、`... "DSH-Guard-Daily-Snapshot" /f`
-3. 从 profile `package.json` 里移除 `@local/dsh-guard-ui`，并删掉两个 junction
+3. 从 profile `package.json` 里移除 `dsh-guard-ui`，并删掉两个 junction
 4. 结束残留的 `pythonw.exe`（守护进程）

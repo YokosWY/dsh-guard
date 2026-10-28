@@ -10,7 +10,7 @@
 import { readFileSync, writeFileSync, renameSync, mkdirSync, existsSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-export const PACKAGE_ID = "@local/dsh-guard-ui";
+export const PACKAGE_ID = "dsh-guard-ui";
 export const PORT = Number(process.env.DSH_GUARD_UI_PORT || 43891);
 export const PORT_SPAN = 10; // 43891..43900；两套 DSH 同时开时靠这段区间避让
 export const LOCAL_HOSTS = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);

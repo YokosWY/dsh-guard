@@ -1,7 +1,23 @@
 {
-  "name": "@local/dsh-guard-ui",
-  "version": "0.1.0",
-  "private": true,
+  "name": "dsh-guard-ui",
+  "version": "0.2.0",
+  "author": "YokosWY",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YokosWY/dsh-guard.git",
+    "directory": "plugin"
+  },
+  "homepage": "https://github.com/YokosWY/dsh-guard/tree/main/plugin#readme",
+  "bugs": {
+    "url": "https://github.com/YokosWY/dsh-guard/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "windows",
+    "watchdog"
+  ],
   "type": "module",
   "main": "./lib/index.js",
   "exports": {

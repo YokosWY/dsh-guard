@@ -17,7 +17,7 @@
  * 写成短名会 duplicate factory registration → web boot 失败。
  */
 window.__ModuleLoader__.load({
-  id: "@local/dsh-guard-ui",
+  id: "dsh-guard-ui",
   factory: function (require) {
     // 模块一执行就在这里打一枪（放在 require("react") 之前，连 React 挂掉都能报出来）
     try {
